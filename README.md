@@ -37,24 +37,21 @@ IssueFlow is a modern, high-performance task management application designed for
 ### 1. Clone the repository
 ```bash
 git clone <repository-url>
-cd issue-tracker
+cd issue_tracker
 ```
 
-### 2. Setup the Server
+### 2. Install all dependencies
 ```bash
-cd server
-npm install
-npm start
+npm run install-all
 ```
-The server will run on `http://localhost:3001`.
 
-### 3. Setup the Client
+### 3. Start Development Environment
 ```bash
-cd ../client
-npm install
 npm run dev
 ```
-The client will run on `http://localhost:5173` (default Vite port).
+This will simultaneously start:
+- **Server**: `http://localhost:3001`
+- **Client**: `http://localhost:5173`
 
 ## 📖 Usage Guide
 
@@ -74,7 +71,3 @@ The client will run on `http://localhost:5173` (default Vite port).
 | `Ctrl + Enter` | Save Task (inside form) |
 | `Esc` | Cancel / Close Modal |
 | `Delete` | Move selected tasks to Trash |
-
----
-
-Built with ❤️ for productivity.
