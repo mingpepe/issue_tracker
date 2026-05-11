@@ -6,7 +6,9 @@ IssueFlow is a modern, high-performance task management application designed for
 
 - **🌑 Elegant Dark Theme**: Optimized for focus with a cohesive dark aesthetic across all components.
 - **hierarchy Hierarchical Tasks**: Organize your flow with infinite nesting levels for sub-tasks.
-- **🖱️ Drag-and-Drop Sorting**: Seamlessly reorder tasks or nest them within other tasks using intuitive mouse controls.
+- **🖱️ Advanced Drag-and-Drop**: Seamlessly reorder tasks, nest them, or even drag them across **multiple tabs** for high-level organization.
+- **📝 Instant Editing**: Click any task title or description to instantly pop up a sophisticated **Modal Editor**.
+- **⌨️ Power-User Shortcuts**: Work at the speed of thought with integrated keyboard shortcuts.
 - **✅ Completion Management**: Toggle task status with a single click. Completed tasks are automatically moved to a dedicated "Completed" section.
 - **🧺 Bulk Operations**: Select multiple tasks to perform batch deletions, making cleanup fast and efficient.
 - **📏 Compact UI**: Designed to handle hundreds of tasks with a high-density, streamlined layout.
@@ -56,11 +58,22 @@ The client will run on `http://localhost:5173` (default Vite port).
 
 ## 📖 Usage Guide
 
-- **Creating Tasks**: Use the "New Task" button at the top for top-level issues, or the "Add" button inside a task to create nested sub-tasks.
-- **Organizing**: Grab the handle (six dots icon) on the left of any task to drag and reorder or change its parent.
+- **Creating Tasks**: Use the "New Task" button or press `Alt + N` for top-level issues. Use the "Add" button inside a task to create nested sub-tasks.
+- **Quick Editing**: Simply click on the task title or description to open the edit modal.
+- **Organizing**: 
+    - **Reorder**: Grab the handle on the left of any task to drag and reorder.
+    - **Move to Tab**: Drag any task and drop it onto a Tab label at the top to move it instantly.
 - **Completing**: Click the circular checkbox next to a task title to mark it as done.
-- **Bulk Action**: Click the square checkbox on the far left to select multiple items. A bulk action bar will appear at the bottom for deletion.
-- **Theme**: The application defaults to Dark Mode for a premium engineering experience.
+- **Bulk Action**: Click the square checkbox on the far left to select multiple items. Use the bulk action bar or press `Delete` to move them to Trash.
+
+## ⌨️ Keyboard Shortcuts
+
+| Shortcut | Action |
+| :--- | :--- |
+| `Alt + N` | Toggle New Task form |
+| `Ctrl + Enter` | Save Task (inside form) |
+| `Esc` | Cancel / Close Modal |
+| `Delete` | Move selected tasks to Trash |
 
 ---
 

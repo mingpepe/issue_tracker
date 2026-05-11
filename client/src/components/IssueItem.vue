@@ -8,6 +8,7 @@ import draggable from 'vuedraggable';
 const props = defineProps<{
   issue: Issue;
   depth: number;
+  inheritedTheme?: { card: string; accent: string };
 }>();
 
 const store = useIssueStore();
@@ -66,9 +67,7 @@ const handleUpdate = (data: { title: string; description: string; importance: Le
 };
 
 const handleDelete = () => {
-  if (confirm('Are you sure you want to delete this issue and all its sub-issues?')) {
-    store.deleteIssue(props.issue.id);
-  }
+  store.deleteIssue(props.issue.id);
 };
 
 const toggleDone = () => {
@@ -78,6 +77,29 @@ const toggleDone = () => {
 const toggleSelection = () => {
   store.toggleSelection(props.issue.id);
 };
+
+const themeClass = computed(() => {
+  if (props.issue.completed) return null;
+  if (props.inheritedTheme) return props.inheritedTheme;
+  if (props.depth !== 0) return null;
+  
+  const colors = [
+    { card: 'bg-indigo-100 border-indigo-300 dark:bg-indigo-900/40 dark:border-indigo-700', accent: 'bg-indigo-600' },
+    { card: 'bg-emerald-100 border-emerald-300 dark:bg-emerald-900/40 dark:border-emerald-700', accent: 'bg-emerald-600' },
+    { card: 'bg-rose-100 border-rose-300 dark:bg-rose-900/40 dark:border-rose-700', accent: 'bg-rose-600' },
+    { card: 'bg-amber-100 border-amber-300 dark:bg-amber-900/40 dark:border-amber-700', accent: 'bg-amber-600' },
+    { card: 'bg-sky-100 border-sky-300 dark:bg-sky-900/40 dark:border-sky-700', accent: 'bg-sky-600' },
+    { card: 'bg-violet-100 border-violet-300 dark:bg-violet-900/40 dark:border-violet-700', accent: 'bg-violet-600' },
+    { card: 'bg-orange-100 border-orange-300 dark:bg-orange-900/40 dark:border-orange-700', accent: 'bg-orange-600' },
+    { card: 'bg-lime-100 border-lime-300 dark:bg-lime-900/40 dark:border-lime-700', accent: 'bg-lime-600' },
+  ];
+  
+  let hash = 0;
+  for (let i = 0; i < props.issue.id.length; i++) {
+    hash = props.issue.id.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  return colors[Math.abs(hash) % colors.length];
+});
 </script>
 
 <template>
@@ -86,15 +108,21 @@ const toggleSelection = () => {
     <div v-if="depth > 0" class="absolute -left-5 top-6 h-px w-4 bg-slate-200 dark:bg-slate-700"></div>
 
     <div 
-      class="group/card relative overflow-hidden rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-sm transition"
+      class="group/card relative rounded-lg border bg-white dark:bg-slate-800 shadow-sm transition"
       :class="[
-        isEditing ? 'border-blue-300 ring-4 ring-blue-100 dark:border-blue-500/50 dark:ring-blue-900/30' : 'hover:border-slate-300 dark:hover:border-slate-600 hover:shadow-md',
-        isSelected ? 'ring-2 ring-indigo-500 dark:ring-indigo-600' : ''
+        themeClass ? themeClass.card : 'border-slate-200 dark:border-slate-700',
+        isEditing ? 'border-blue-300 ring-4 ring-blue-100 dark:border-blue-500/50 dark:ring-blue-900/30' : 'hover:border-slate-300 dark:hover:border-slate-600 hover:shadow-md hover:z-40',
+        isSelected ? 'ring-2 ring-indigo-500 dark:ring-indigo-600 z-10' : '',
+        depth > 0 ? 'py-0' : ''
       ]"
     >
-      <div class="absolute bottom-0 left-0 top-0 w-1" :class="urgencyConfig.accent"></div>
+      <!-- Theme Accent Bar -->
+      <div v-if="themeClass" class="absolute top-0 left-0 bottom-0 w-1.5" :class="themeClass.accent"></div>
+      
+      <!-- Urgency Accent -->
+      <div class="absolute bottom-0 left-0 top-0 w-1 overflow-hidden rounded-l-lg" :class="[urgencyConfig.accent, themeClass ? 'ml-1.5' : '']"></div>
 
-      <div v-if="!isEditing" class="flex flex-col gap-2 p-2 pl-4 sm:flex-row sm:items-center">
+      <div v-if="!isEditing" class="flex flex-col gap-2 p-1.5 pl-4 sm:flex-row sm:items-center" :class="{ 'sm:gap-1': depth > 0 }">
         <!-- Selection Checkbox -->
         <div class="flex items-center">
           <button 
@@ -140,22 +168,33 @@ const toggleSelection = () => {
             </svg>
           </button>
           
-          <h3 
-            class="truncate text-sm font-semibold transition-all"
-            :class="[
-              issue.completed ? 'text-slate-400 line-through dark:text-slate-600' : 'text-slate-950 dark:text-slate-100'
-            ]"
+          <div 
+            class="flex-1 min-w-0 flex flex-col justify-center cursor-pointer group/text" 
+            @click="!issue.completed && (isEditing = true)"
+            title="Click to edit"
           >
-            {{ issue.title }}
-          </h3>
-          
-          <div class="flex flex-wrap items-center gap-1">
-            <span class="rounded px-1.5 py-0.5 text-[10px] font-bold ring-1 ring-inset uppercase" :class="importanceConfig.className">
-              {{ importanceConfig.label }}
-            </span>
-            <span v-if="issue.children.length > 0" class="rounded bg-slate-100 dark:bg-slate-700 px-1.5 py-0.5 text-[10px] font-bold text-slate-500 dark:text-slate-400 transition-colors uppercase">
-              {{ issue.children.length }} Sub
-            </span>
+            <div class="flex items-center gap-3">
+              <h3 
+                class="truncate text-sm font-semibold transition-all"
+                :class="[
+                  issue.completed ? 'text-slate-400 line-through dark:text-slate-600' : 'text-slate-950 dark:text-slate-100 group-hover/text:text-indigo-600 dark:group-hover/text:text-indigo-400'
+                ]"
+              >
+                {{ issue.title }}
+              </h3>
+              
+              <div class="flex flex-wrap items-center gap-1">
+                <span class="rounded px-1.5 py-0.5 text-[10px] font-bold ring-1 ring-inset uppercase" :class="importanceConfig.className">
+                  {{ importanceConfig.label }}
+                </span>
+                <span v-if="issue.children.length > 0" class="rounded bg-slate-100 dark:bg-slate-700 px-1.5 py-0.5 text-[10px] font-bold text-slate-500 dark:text-slate-400 transition-colors uppercase">
+                  {{ issue.children.length }} Sub
+                </span>
+              </div>
+            </div>
+            <p v-if="issue.description" class="mt-0.5 text-[11px] text-slate-500 dark:text-slate-400 line-clamp-1 italic">
+              {{ issue.description }}
+            </p>
           </div>
         </div>
 
@@ -172,6 +211,30 @@ const toggleSelection = () => {
             </svg>
             Edit
           </button>
+          
+          <!-- Move to Tab Dropdown -->
+          <div v-if="!issue.completed && store.tabs.length > 1" class="relative group/move">
+            <button @click.stop class="inline-flex h-7 items-center gap-1 rounded-md px-1.5 text-xs font-medium text-slate-500 dark:text-slate-400 transition hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-slate-900 dark:hover:text-slate-100">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+              </svg>
+              Move
+            </button>
+            <div class="absolute right-0 top-full z-[100] mt-0 hidden w-40 origin-top-right rounded-md bg-white dark:bg-slate-800 shadow-2xl ring-1 ring-black ring-opacity-10 focus:outline-none group-hover/move:block border border-slate-200 dark:border-slate-700">
+              <div class="py-1">
+                <div class="px-3 py-1.5 text-[10px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-100 dark:border-slate-700 mb-1">Move to Tab</div>
+                <button
+                  v-for="tab in store.tabs.filter(t => t.id !== store.activeTabId)"
+                  :key="tab.id"
+                  @click.stop="store.moveIssueToTab(issue.id, tab.id)"
+                  class="block w-full px-4 py-2 text-left text-xs text-slate-700 dark:text-slate-300 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 hover:text-indigo-600 dark:hover:text-indigo-400 font-bold transition-colors"
+                >
+                  {{ tab.name }}
+                </button>
+              </div>
+            </div>
+          </div>
+
           <button @click="handleDelete" class="inline-flex h-7 items-center gap-1 rounded-md px-1.5 text-xs font-medium text-red-600 dark:text-red-400 transition hover:bg-red-50 dark:hover:bg-red-900/20">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
@@ -194,7 +257,7 @@ const toggleSelection = () => {
       </div>
     </div>
 
-    <div v-if="isAddingChild" class="ml-6 mt-3 sm:ml-10">
+    <div v-if="isAddingChild" class="ml-6 mt-1 sm:ml-10">
       <IssueForm
         submit-label="Create Sub-task"
         @submit="handleAddChild"
@@ -202,29 +265,33 @@ const toggleSelection = () => {
       />
     </div>
 
-    <div v-if="isExpanded && (issue.children.length > 0 || !issue.completed)" class="ml-6 mt-3 space-y-3 sm:ml-10">
+    <div v-if="isExpanded && (issue.children.length > 0 || !issue.completed)" class="ml-6 mt-1 space-y-1 sm:ml-10">
       <draggable 
         v-model="childIssues" 
         item-key="id"
         handle=".drag-handle"
-        ghost-class="opacity-50"
-        class="space-y-3 min-h-[8px]"
+        ghost-class="ghost-class"
+        class="space-y-1 min-h-[4px]"
         :group="{ name: 'issues' }"
+        @start="store.draggingIssueId = ($event.item as any)._underlying_vm_.id"
+        @end="store.draggingIssueId = null"
       >
         <template #item="{ element }">
           <IssueItem 
             :issue="element" 
             :depth="depth + 1" 
+            :inherited-theme="themeClass || undefined"
           />
         </template>
       </draggable>
 
-      <div v-if="doneChildren.length > 0" class="mt-4 pt-4 border-t border-slate-100 dark:border-slate-800">
+      <div v-if="store.showDone && doneChildren.length > 0" class="mt-2 pt-2 border-t border-slate-100 dark:border-slate-800 space-y-1">
         <IssueItem 
           v-for="child in doneChildren" 
           :key="child.id" 
           :issue="child" 
           :depth="depth + 1" 
+          :inherited-theme="themeClass || undefined"
         />
       </div>
     </div>

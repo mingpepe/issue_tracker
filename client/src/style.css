@@ -53,3 +53,15 @@ button:disabled {
 #app {
   min-height: 100svh;
 }
+
+.ghost-class {
+  opacity: 0.5;
+  background: #e2e8f0 !important;
+  border: 2px dashed #6366f1 !important;
+  border-radius: 0.5rem;
+}
+
+.dark .ghost-class {
+  background: #1e293b !important;
+  border-color: #818cf8 !important;
+}

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import type { Level } from '../types';
 
 const props = defineProps<{
@@ -15,10 +15,15 @@ const emit = defineEmits<{
   (e: 'cancel'): void;
 }>();
 
+const titleInput = ref<HTMLInputElement | null>(null);
 const title = ref(props.initialTitle || '');
 const description = ref(props.initialDescription || '');
 const importance = ref<Level>(props.initialImportance || 1);
 const urgency = ref<Level>(props.initialUrgency || 1);
+
+onMounted(() => {
+  titleInput.value?.focus();
+});
 
 const isFormValid = computed(() => title.value.trim().length > 0);
 
@@ -32,12 +37,20 @@ const handleSubmit = () => {
   });
 };
 
-const levelOptions: Array<{ value: Level; label: string; activeClass: string }> = [
-  { value: 4, label: 'Critical', activeClass: 'bg-red-600 text-white border-red-600' },
-  { value: 3, label: 'High', activeClass: 'bg-orange-600 text-white border-orange-600' },
-  { value: 2, label: 'Medium', activeClass: 'bg-amber-50 text-slate-950 border-amber-500' },
-  { value: 1, label: 'Low', activeClass: 'bg-teal-600 text-white border-teal-600' },
-];
+const levelOptions = {
+  importance: [
+    { value: 4, label: 'Critical', activeClass: 'bg-red-600 text-white border-red-600' },
+    { value: 3, label: 'High', activeClass: 'bg-orange-600 text-white border-orange-600' },
+    { value: 2, label: 'Medium', activeClass: 'bg-amber-50 text-slate-950 border-amber-500' },
+    { value: 1, label: 'Low', activeClass: 'bg-teal-600 text-white border-teal-600' },
+  ] as Array<{ value: Level; label: string; activeClass: string }>,
+  urgency: [
+    { value: 4, label: 'Urgent', activeClass: 'bg-red-600 text-white border-red-600' },
+    { value: 3, label: 'Soon', activeClass: 'bg-orange-600 text-white border-orange-600' },
+    { value: 2, label: 'Normal', activeClass: 'bg-amber-50 text-slate-950 border-amber-500' },
+    { value: 1, label: 'Later', activeClass: 'bg-teal-600 text-white border-teal-600' },
+  ] as Array<{ value: Level; label: string; activeClass: string }>
+};
 </script>
 
 <template>
@@ -58,14 +71,15 @@ const levelOptions: Array<{ value: Level; label: string; activeClass: string }> 
       </button>
     </div>
 
-    <form @submit.prevent="handleSubmit" class="space-y-6 p-5">
+    <form @submit.prevent="handleSubmit" class="space-y-6 p-5" @keydown.esc="$emit('cancel')">
       <div class="space-y-2">
         <label class="block text-sm font-medium text-slate-700 dark:text-slate-300">Title</label>
         <input
+          ref="titleInput"
           v-model="title"
           type="text"
           required
-          autofocus
+          @keydown.ctrl.enter="handleSubmit"
           class="w-full rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 px-3 py-2.5 text-base text-slate-900 dark:text-slate-100 outline-none transition placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:border-blue-600 dark:focus:border-blue-500 focus:ring-3 focus:ring-blue-100 dark:focus:ring-blue-900/30"
           placeholder="A concise issue title"
         />
@@ -75,6 +89,7 @@ const levelOptions: Array<{ value: Level; label: string; activeClass: string }> 
         <label class="block text-sm font-medium text-slate-700 dark:text-slate-300">Description</label>
         <textarea
           v-model="description"
+          @keydown.ctrl.enter="handleSubmit"
           class="min-h-[112px] w-full resize-y rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 px-3 py-2.5 text-sm leading-6 text-slate-800 dark:text-slate-300 outline-none transition placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:border-blue-600 dark:focus:border-blue-500 focus:ring-3 focus:ring-blue-100 dark:focus:ring-blue-900/30"
           placeholder="Optional context, acceptance criteria, or links"
         ></textarea>
@@ -83,18 +98,19 @@ const levelOptions: Array<{ value: Level; label: string; activeClass: string }> 
       <div class="grid grid-cols-1 gap-5 md:grid-cols-2">
         <div class="space-y-3">
           <label class="block text-sm font-medium text-slate-700 dark:text-slate-300">Importance</label>
-          <div class="grid grid-cols-4 gap-2">
+          <div class="grid grid-cols-4 gap-1.5">
             <button
-              v-for="opt in levelOptions"
+              v-for="opt in levelOptions.importance"
               :key="'imp-'+opt.value"
               type="button"
               @click="importance = opt.value"
               :class="[
-                'rounded-md border px-2 py-2 text-xs font-semibold transition',
+                'rounded-md border px-1 py-2 text-[10px] font-bold uppercase transition truncate',
                 importance === opt.value 
                   ? opt.activeClass 
                   : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:border-slate-400 dark:hover:border-slate-500 hover:bg-slate-50 dark:hover:bg-slate-700'
               ]"
+              :title="opt.label"
             >
               {{ opt.label }}
             </button>
@@ -103,18 +119,19 @@ const levelOptions: Array<{ value: Level; label: string; activeClass: string }> 
 
         <div class="space-y-3">
           <label class="block text-sm font-medium text-slate-700 dark:text-slate-300">Urgency</label>
-          <div class="grid grid-cols-4 gap-2">
+          <div class="grid grid-cols-4 gap-1.5">
             <button
-              v-for="opt in levelOptions"
+              v-for="opt in levelOptions.urgency"
               :key="'urg-'+opt.value"
               type="button"
               @click="urgency = opt.value"
               :class="[
-                'rounded-md border px-2 py-2 text-xs font-semibold transition',
+                'rounded-md border px-1 py-2 text-[10px] font-bold uppercase transition truncate',
                 urgency === opt.value 
                   ? opt.activeClass 
                   : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:border-slate-400 dark:hover:border-slate-500 hover:bg-slate-50 dark:hover:bg-slate-700'
               ]"
+              :title="opt.label"
             >
               {{ opt.label }}
             </button>

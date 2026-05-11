@@ -11,3 +11,9 @@ export interface Issue {
   completed: boolean;
   order: number;
 }
+
+export interface Tab {
+  id: string;
+  name: string;
+  issues: Issue[];
+}

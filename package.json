@@ -1,0 +1,9 @@
+{
+  "name": "issue-tracker-root",
+  "private": true,
+  "version": "1.0.0",
+  "scripts": {
+    "dev": "node dev.mjs",
+    "install-all": "npm install && cd client && npm install && cd ../server && npm install"
+  }
+}
