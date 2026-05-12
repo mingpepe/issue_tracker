@@ -11,6 +11,7 @@ export const useIssueStore = defineStore('issue', () => {
     { id: 'default', name: 'Main', issues: [] }
   ]);
   const trash = ref<Issue[]>([]);
+  const workspaceIds = ref<string[]>([]);
   const activeTabId = ref('default');
   const loading = ref(false);
   const selectedIds = ref<Set<string>>(new Set());
@@ -29,6 +30,12 @@ export const useIssueStore = defineStore('issue', () => {
     }
   });
 
+  const workspaceIssues = computed(() => {
+    return workspaceIds.value
+      .map(id => findIssueByIdInAllTabs(id))
+      .filter((issue): issue is Issue => !!issue);
+  });
+
   async function fetchIssues() {
     loading.value = true;
     try {
@@ -40,6 +47,7 @@ export const useIssueStore = defineStore('issue', () => {
         // New structure with tabs and trash
         tabs.value = data.tabs || [{ id: 'default', name: 'Main', issues: [] }];
         trash.value = data.trash || [];
+        workspaceIds.value = data.workspaceIds || [];
       } else if (Array.isArray(data)) {
         // Migration from old array-only format
         if (data.length > 0 && 'id' in data[0] && !('issues' in data[0])) {
@@ -50,6 +58,7 @@ export const useIssueStore = defineStore('issue', () => {
           tabs.value = [{ id: 'default', name: 'Main', issues: [] }];
         }
         trash.value = [];
+        workspaceIds.value = [];
       }
       
       if (tabs.value.length > 0 && !tabs.value.find(t => t.id === activeTabId.value)) {
@@ -66,7 +75,8 @@ export const useIssueStore = defineStore('issue', () => {
     try {
       await axios.post(API_URL, {
         tabs: tabs.value,
-        trash: trash.value
+        trash: trash.value,
+        workspaceIds: workspaceIds.value
       });
     } catch (error) {
       console.error('Failed to sync issues:', error);
@@ -174,6 +184,7 @@ export const useIssueStore = defineStore('issue', () => {
     }
     
     selectedIds.value.delete(id);
+    removeFromWorkspace(id);
     syncIssues();
   }
 
@@ -248,6 +259,31 @@ export const useIssueStore = defineStore('issue', () => {
     syncIssues();
   }
 
+  function addToWorkspace(ids: string[]) {
+    const newIds = ids.filter(id => !workspaceIds.value.includes(id));
+    workspaceIds.value.push(...newIds);
+    syncIssues();
+  }
+
+  function removeFromWorkspace(id: string) {
+    const index = workspaceIds.value.indexOf(id);
+    if (index !== -1) {
+      workspaceIds.value.splice(index, 1);
+      syncIssues();
+    }
+  }
+
+  function clearWorkspace() {
+    workspaceIds.value = [];
+    syncIssues();
+  }
+
+  function reorderWorkspace(oldIndex: number, newIndex: number) {
+    const movedId = workspaceIds.value.splice(oldIndex, 1)[0];
+    workspaceIds.value.splice(newIndex, 0, movedId);
+    syncIssues();
+  }
+
   function findIssueById(list: Issue[], id: string): Issue | undefined {
     for (const item of list) {
       if (item.id === id) return item;
@@ -268,6 +304,8 @@ export const useIssueStore = defineStore('issue', () => {
   return {
     tabs,
     trash,
+    workspaceIds,
+    workspaceIssues,
     activeTabId,
     issues,
     loading,
@@ -289,6 +327,10 @@ export const useIssueStore = defineStore('issue', () => {
     toggleSelection,
     clearSelection,
     bulkDelete,
+    addToWorkspace,
+    removeFromWorkspace,
+    clearWorkspace,
+    reorderWorkspace,
     draggingIssueId,
   };
 });

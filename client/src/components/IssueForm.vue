@@ -25,6 +25,26 @@ onMounted(() => {
   titleInput.value?.focus();
 });
 
+const isDirty = computed(() => {
+  return title.value !== (props.initialTitle || '') ||
+         description.value !== (props.initialDescription || '') ||
+         importance.value !== (props.initialImportance || 1) ||
+         urgency.value !== (props.initialUrgency || 1);
+});
+
+const handleCancel = () => {
+  if (isDirty.value) {
+    if (confirm('You have unsaved changes. Are you sure you want to discard them?')) {
+      emit('cancel');
+      return true;
+    }
+    return false;
+  } else {
+    emit('cancel');
+    return true;
+  }
+};
+
 const isFormValid = computed(() => title.value.trim().length > 0);
 
 const handleSubmit = () => {
@@ -36,6 +56,10 @@ const handleSubmit = () => {
     urgency: urgency.value,
   });
 };
+
+defineExpose({
+  handleCancel
+});
 
 const levelOptions = {
   importance: [
@@ -61,7 +85,7 @@ const levelOptions = {
       </h4>
       <button
         type="button"
-        @click="$emit('cancel')"
+        @click="handleCancel"
         class="inline-flex h-8 w-8 items-center justify-center rounded-md text-slate-500 dark:text-slate-400 transition hover:bg-slate-200 dark:hover:bg-slate-700 hover:text-slate-900 dark:hover:text-slate-100"
         aria-label="Cancel"
       >
@@ -71,7 +95,7 @@ const levelOptions = {
       </button>
     </div>
 
-    <form @submit.prevent="handleSubmit" class="space-y-6 p-5" @keydown.esc="$emit('cancel')">
+    <form @submit.prevent="handleSubmit" class="space-y-6 p-5" @keydown.esc="handleCancel">
       <div class="space-y-2">
         <label class="block text-sm font-medium text-slate-700 dark:text-slate-300">Title</label>
         <input
@@ -142,7 +166,7 @@ const levelOptions = {
       <div class="flex items-center justify-end gap-3 border-t border-slate-100 dark:border-slate-700 pt-5 transition-colors">
         <button
           type="button"
-          @click="$emit('cancel')"
+          @click="handleCancel"
           class="rounded-md px-3 py-2 text-sm font-medium text-slate-600 dark:text-slate-400 transition hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-slate-900 dark:hover:text-slate-100"
         >
           Cancel

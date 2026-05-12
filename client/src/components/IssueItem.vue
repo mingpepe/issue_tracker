@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue';
+import { ref, computed, onUnmounted, watch } from 'vue';
 import type { Issue, Level } from '../types';
 import { useIssueStore } from '../store/issueStore';
 import IssueForm from './IssueForm.vue';
@@ -16,7 +16,40 @@ const isExpanded = ref(true);
 const isAddingChild = ref(false);
 const isEditing = ref(false);
 
+const editFormRef = ref<any>(null);
+const addFormRef = ref<any>(null);
+
+const handleClickOutside = (event: MouseEvent) => {
+  if (isEditing.value && editFormRef.value) {
+    const el = editFormRef.value.$el || editFormRef.value;
+    if (!el.contains(event.target as Node)) {
+      editFormRef.value.handleCancel();
+    }
+  }
+  if (isAddingChild.value && addFormRef.value) {
+    const el = addFormRef.value.$el || addFormRef.value;
+    if (!el.contains(event.target as Node)) {
+      addFormRef.value.handleCancel();
+    }
+  }
+};
+
+watch([isEditing, isAddingChild], ([newEdit, newAdd]) => {
+  if (newEdit || newAdd) {
+    setTimeout(() => {
+      document.addEventListener('click', handleClickOutside);
+    }, 0);
+  } else {
+    document.removeEventListener('click', handleClickOutside);
+  }
+});
+
+onUnmounted(() => {
+  document.removeEventListener('click', handleClickOutside);
+});
+
 const isSelected = computed(() => store.selectedIds.has(props.issue.id));
+const isInWorkspace = computed(() => store.workspaceIds.includes(props.issue.id) && !props.issue.completed);
 
 const childIssues = computed({
   get: () => props.issue.children.filter(i => !i.completed).sort((a, b) => a.order - b.order),
@@ -108,10 +141,10 @@ const themeClass = computed(() => {
     <div v-if="depth > 0" class="absolute -left-5 top-6 h-px w-4 bg-slate-200 dark:bg-slate-700"></div>
 
     <div 
-      class="group/card relative rounded-lg border bg-white dark:bg-slate-800 shadow-sm transition"
+      class="drag-handle cursor-grab group/card relative rounded-lg border bg-white dark:bg-slate-800 shadow-sm transition"
       :class="[
         themeClass ? themeClass.card : 'border-slate-200 dark:border-slate-700',
-        isEditing ? 'border-blue-300 ring-4 ring-blue-100 dark:border-blue-500/50 dark:ring-blue-900/30' : 'hover:border-slate-300 dark:hover:border-slate-600 hover:shadow-md hover:z-40',
+        isEditing ? 'border-blue-300 ring-4 ring-blue-100 dark:border-blue-500/50 dark:ring-blue-900/30 !cursor-default' : 'hover:border-slate-300 dark:hover:border-slate-600 hover:shadow-md hover:z-40',
         isSelected ? 'ring-2 ring-indigo-500 dark:ring-indigo-600 z-10' : '',
         depth > 0 ? 'py-0' : ''
       ]"
@@ -124,7 +157,7 @@ const themeClass = computed(() => {
 
       <div v-if="!isEditing" class="flex flex-col gap-2 p-1.5 pl-4 sm:flex-row sm:items-center" :class="{ 'sm:gap-1': depth > 0 }">
         <!-- Selection Checkbox -->
-        <div class="flex items-center">
+        <div class="flex items-center" @click.stop>
           <button 
             @click="toggleSelection"
             class="flex h-4 w-4 items-center justify-center rounded border transition-all"
@@ -136,20 +169,13 @@ const themeClass = computed(() => {
           </button>
         </div>
 
-        <!-- Drag Handle -->
-        <div v-if="!issue.completed" class="drag-handle cursor-grab text-slate-300 hover:text-slate-500 dark:text-slate-700 dark:hover:text-slate-500 transition-colors">
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-            <path fill-rule="evenodd" d="M10 3a1 1 0 01.707.293l3 3a1 1 0 01-1.414 1.414L10 5.414 7.707 7.707a1 1 0 01-1.414-1.414l3-3A1 1 0 0110 3zm-3.707 9.293a1 1 0 011.414 0L10 14.586l2.293-2.293a1 1 0 011.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clip-rule="evenodd" />
-          </svg>
-        </div>
-
         <button 
           v-if="issue.children.length > 0"
-          @click="isExpanded = !isExpanded"
+          @click.stop="isExpanded = !isExpanded"
           class="inline-flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-md border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-500 dark:text-slate-400 transition hover:bg-slate-50 dark:hover:bg-slate-700 hover:text-slate-900 dark:hover:text-slate-100"
           aria-label="Toggle child issues"
         >
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 transition-transform" :class="isExpanded ? 'rotate-0' : '-rotate-90'" viewBox="0 0 20 20" fill="currentColor">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 transition-transform" :class="isExpanded ? 'rotate-0' : '-rotate-90'" viewBox="0 0 20 20" fill="currentColor">
             <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
           </svg>
         </button>
@@ -159,7 +185,7 @@ const themeClass = computed(() => {
 
         <div class="flex-1 min-w-0 flex items-center gap-3">
           <button 
-            @click="toggleDone"
+            @click.stop="toggleDone"
             class="group/check relative flex h-4 w-4 flex-shrink-0 items-center justify-center rounded-full border transition-all"
             :class="issue.completed ? 'bg-green-600 border-green-600' : 'border-slate-300 dark:border-slate-600 hover:border-green-500'"
           >
@@ -170,7 +196,7 @@ const themeClass = computed(() => {
           
           <div 
             class="flex-1 min-w-0 flex flex-col justify-center cursor-pointer group/text" 
-            @click="!issue.completed && (isEditing = true)"
+            @click.stop="!issue.completed && (isEditing = true)"
             title="Click to edit"
           >
             <div class="flex items-center gap-3">
@@ -184,6 +210,12 @@ const themeClass = computed(() => {
               </h3>
               
               <div class="flex flex-wrap items-center gap-1">
+                <span v-if="isInWorkspace" class="rounded px-1.5 py-0.5 text-[10px] font-black bg-indigo-600 text-white ring-1 ring-indigo-500 uppercase tracking-tighter flex items-center gap-1">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-2 w-2" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.381z" clip-rule="evenodd" />
+                  </svg>
+                  Focus
+                </span>
                 <span class="rounded px-1.5 py-0.5 text-[10px] font-bold ring-1 ring-inset uppercase" :class="importanceConfig.className">
                   {{ importanceConfig.label }}
                 </span>
@@ -198,7 +230,7 @@ const themeClass = computed(() => {
           </div>
         </div>
 
-        <div class="flex flex-shrink-0 items-center gap-0.5 sm:opacity-0 sm:transition sm:group-hover/card:opacity-100">
+        <div class="flex flex-shrink-0 items-center gap-0.5 sm:opacity-0 sm:transition sm:group-hover/card:opacity-100" @click.stop>
           <button v-if="!issue.completed" @click="isAddingChild = !isAddingChild" class="inline-flex h-7 items-center gap-1 rounded-md px-1.5 text-xs font-medium text-slate-500 dark:text-slate-400 transition hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-slate-950 dark:hover:text-slate-100">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
@@ -244,8 +276,9 @@ const themeClass = computed(() => {
         </div>
       </div>
 
-      <div v-else class="bg-slate-50 dark:bg-slate-900/50 p-3 transition-colors">
+      <div v-else class="bg-slate-50 dark:bg-slate-900/50 p-3 transition-colors" @click.stop>
         <IssueForm
+          ref="editFormRef"
           :initial-title="issue.title"
           :initial-description="issue.description"
           :initial-importance="issue.importance"
@@ -257,8 +290,9 @@ const themeClass = computed(() => {
       </div>
     </div>
 
-    <div v-if="isAddingChild" class="ml-6 mt-1 sm:ml-10">
+    <div v-if="isAddingChild" class="ml-6 mt-1 sm:ml-10" @click.stop>
       <IssueForm
+        ref="addFormRef"
         submit-label="Create Sub-task"
         @submit="handleAddChild"
         @cancel="isAddingChild = false"
