@@ -122,8 +122,6 @@ const vFocus = {
       <header class="bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 sticky top-0 z-30 shadow-sm transition-colors">
         <div class="max-w-5xl mx-auto px-6 h-14 flex items-center justify-between">
           <div class="flex items-center gap-6 overflow-hidden">
-            <h1 class="text-sm font-black text-slate-800 dark:text-slate-100 tracking-tight leading-none uppercase flex-shrink-0">IssueFlow</h1>
-            
             <!-- Tab Bar -->
             <div v-if="!showTrash" class="flex items-center gap-1 overflow-x-auto no-scrollbar scroll-smooth">
               <div 
@@ -264,7 +262,7 @@ const vFocus = {
                   <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
                   </svg>
-                  Focus
+                  Track
                 </button>
                 <button 
                   @click="handleBulkDelete"

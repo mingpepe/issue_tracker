@@ -117,14 +117,18 @@ const themeClass = computed(() => {
   if (props.depth !== 0) return null;
   
   const colors = [
-    { card: 'bg-indigo-100 border-indigo-300 dark:bg-indigo-900/40 dark:border-indigo-700', accent: 'bg-indigo-600' },
-    { card: 'bg-emerald-100 border-emerald-300 dark:bg-emerald-900/40 dark:border-emerald-700', accent: 'bg-emerald-600' },
-    { card: 'bg-rose-100 border-rose-300 dark:bg-rose-900/40 dark:border-rose-700', accent: 'bg-rose-600' },
-    { card: 'bg-amber-100 border-amber-300 dark:bg-amber-900/40 dark:border-amber-700', accent: 'bg-amber-600' },
-    { card: 'bg-sky-100 border-sky-300 dark:bg-sky-900/40 dark:border-sky-700', accent: 'bg-sky-600' },
-    { card: 'bg-violet-100 border-violet-300 dark:bg-violet-900/40 dark:border-violet-700', accent: 'bg-violet-600' },
-    { card: 'bg-orange-100 border-orange-300 dark:bg-orange-900/40 dark:border-orange-700', accent: 'bg-orange-600' },
-    { card: 'bg-lime-100 border-lime-300 dark:bg-lime-900/40 dark:border-lime-700', accent: 'bg-lime-600' },
+    { card: 'bg-indigo-50 border-indigo-200 dark:bg-indigo-900/20 dark:border-indigo-500/50', accent: 'bg-indigo-500' },
+    { card: 'bg-emerald-50 border-emerald-200 dark:bg-emerald-900/20 dark:border-emerald-500/50', accent: 'bg-emerald-500' },
+    { card: 'bg-rose-50 border-rose-200 dark:bg-rose-900/20 dark:border-rose-500/50', accent: 'bg-rose-500' },
+    { card: 'bg-amber-50 border-amber-200 dark:bg-amber-900/20 dark:border-amber-500/50', accent: 'bg-amber-500' },
+    { card: 'bg-sky-50 border-sky-200 dark:bg-sky-900/20 dark:border-sky-500/50', accent: 'bg-sky-500' },
+    { card: 'bg-fuchsia-50 border-fuchsia-200 dark:bg-fuchsia-900/20 dark:border-fuchsia-500/50', accent: 'bg-fuchsia-500' },
+    { card: 'bg-orange-50 border-orange-200 dark:bg-orange-900/20 dark:border-orange-500/50', accent: 'bg-orange-500' },
+    { card: 'bg-lime-50 border-lime-200 dark:bg-lime-900/20 dark:border-lime-500/50', accent: 'bg-lime-500' },
+    { card: 'bg-cyan-50 border-cyan-200 dark:bg-cyan-900/20 dark:border-cyan-500/50', accent: 'bg-cyan-500' },
+    { card: 'bg-pink-50 border-pink-200 dark:bg-pink-900/20 dark:border-pink-500/50', accent: 'bg-pink-500' },
+    { card: 'bg-violet-50 border-violet-200 dark:bg-violet-900/20 dark:border-violet-500/50', accent: 'bg-violet-500' },
+    { card: 'bg-teal-50 border-teal-200 dark:bg-teal-900/20 dark:border-teal-500/50', accent: 'bg-teal-500' },
   ];
   
   let hash = 0;
@@ -150,10 +154,10 @@ const themeClass = computed(() => {
       ]"
     >
       <!-- Theme Accent Bar -->
-      <div v-if="themeClass" class="absolute top-0 left-0 bottom-0 w-1.5" :class="themeClass.accent"></div>
+      <div v-if="themeClass" class="absolute top-0 left-0 bottom-0 w-2" :class="themeClass.accent"></div>
       
       <!-- Urgency Accent -->
-      <div class="absolute bottom-0 left-0 top-0 w-1 overflow-hidden rounded-l-lg" :class="[urgencyConfig.accent, themeClass ? 'ml-1.5' : '']"></div>
+      <div class="absolute bottom-0 left-0 top-0 w-1 overflow-hidden rounded-l-lg" :class="[urgencyConfig.accent, themeClass ? 'ml-2' : '']"></div>
 
       <div v-if="!isEditing" class="flex flex-col gap-2 p-1.5 pl-4 sm:flex-row sm:items-center" :class="{ 'sm:gap-1': depth > 0 }">
         <!-- Selection Checkbox -->
@@ -212,9 +216,9 @@ const themeClass = computed(() => {
               <div class="flex flex-wrap items-center gap-1">
                 <span v-if="isInWorkspace" class="rounded px-1.5 py-0.5 text-[10px] font-black bg-indigo-600 text-white ring-1 ring-indigo-500 uppercase tracking-tighter flex items-center gap-1">
                   <svg xmlns="http://www.w3.org/2000/svg" class="h-2 w-2" viewBox="0 0 20 20" fill="currentColor">
-                    <path fill-rule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.381z" clip-rule="evenodd" />
+                    <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
                   </svg>
-                  Focus
+                  Tracked
                 </span>
                 <span class="rounded px-1.5 py-0.5 text-[10px] font-bold ring-1 ring-inset uppercase" :class="importanceConfig.className">
                   {{ importanceConfig.label }}

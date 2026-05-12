@@ -1,6 +1,6 @@
-# IssueFlow - Intelligent Task Management
+# TaskPulse - Intelligent Task Management
 
-IssueFlow is a modern, high-performance task management application designed for organized workflows. It features a sophisticated dark theme, hierarchical task nesting, and fluid drag-and-drop organization.
+TaskPulse is a modern, high-performance task management application designed for organized workflows. It features a sophisticated dark theme, hierarchical task nesting, and fluid drag-and-drop organization.
 
 ## 🚀 Key Features
 
