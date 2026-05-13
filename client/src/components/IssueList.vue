@@ -112,6 +112,14 @@ const onTabDrop = (tabId: string) => {
 const vFocus = {
   mounted: (el: HTMLInputElement) => el.focus()
 };
+
+const draggableTabs = computed({
+  get: () => store.tabs,
+  set: (val) => {
+    store.tabs = val;
+    store.syncIssues();
+  }
+});
 </script>
 
 <template>
@@ -123,62 +131,69 @@ const vFocus = {
         <div class="max-w-5xl mx-auto px-6 h-14 flex items-center justify-between">
           <div class="flex items-center gap-6 overflow-hidden">
             <!-- Tab Bar -->
-            <div v-if="!showTrash" class="flex items-center gap-1 overflow-x-auto no-scrollbar scroll-smooth">
-              <div 
-                v-for="tab in store.tabs" 
-                :key="tab.id"
-                class="relative group/tab"
-                @dragover.prevent
-                @drop="onTabDrop(tab.id)"
-              >
-                <div v-if="editingTabId === tab.id" class="flex items-center px-2 py-1">
-                  <input 
-                    v-model="editingTabName"
-                    @blur="saveTabRename"
-                    @keyup.enter="saveTabRename"
-                    @keyup.esc="cancelTabRename"
-                    v-focus
-                    class="bg-slate-100 dark:bg-slate-700 border-none rounded px-2 py-1 text-xs font-bold outline-none ring-2 ring-indigo-500 w-24"
-                  />
+            <draggable 
+              v-if="!showTrash" 
+              v-model="draggableTabs" 
+              item-key="id"
+              class="flex items-center gap-1 overflow-x-auto no-scrollbar scroll-smooth"
+              handle=".tab-drag-handle"
+            >
+              <template #item="{ element: tab }">
+                <div 
+                  class="relative group/tab"
+                  @dragover.prevent
+                  @drop="onTabDrop(tab.id)"
+                >
+                  <div v-if="editingTabId === tab.id" class="flex items-center px-2 py-1">
+                    <input 
+                      v-model="editingTabName"
+                      @blur="saveTabRename"
+                      @keyup.enter="saveTabRename"
+                      @keyup.esc="cancelTabRename"
+                      v-focus
+                      class="bg-slate-100 dark:bg-slate-700 border-none rounded px-2 py-1 text-xs font-bold outline-none ring-2 ring-indigo-500 w-24"
+                    />
+                  </div>
+                  <div v-else class="flex items-center">
+                    <button 
+                      @click="store.activeTabId = tab.id"
+                      @dblclick="startRenameTab(tab.id, tab.name)"
+                      class="tab-drag-handle px-4 py-4 text-xs font-bold transition-all border-b-2 whitespace-nowrap cursor-grab active:cursor-grabbing"
+                      :class="[
+                        store.activeTabId === tab.id 
+                          ? 'text-indigo-600 dark:text-indigo-400 border-indigo-600 dark:border-indigo-400' 
+                          : 'text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200 border-transparent',
+                        store.draggingIssueId ? 'bg-indigo-50/50 dark:bg-indigo-900/20' : ''
+                      ]"
+                    >
+                      {{ tab.name }}
+                    </button>
+                    <button 
+                      v-if="store.tabs.length > 1"
+                      @click.stop="handleDeleteTab(tab.id, tab.name)"
+                      class="absolute top-1 right-0 opacity-0 group-hover/tab:opacity-100 transition-opacity bg-red-500/80 hover:bg-red-500 text-white rounded-full p-0.5"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" class="h-2 w-2" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
+                      </svg>
+                    </button>
+                  </div>
+                  
+                  <!-- Drop Zone Indicator -->
+                  <div v-if="store.draggingIssueId && store.activeTabId !== tab.id" class="absolute inset-0 border-2 border-dashed border-indigo-400 dark:border-indigo-500 rounded-lg pointer-events-none animate-pulse"></div>
                 </div>
-                <div v-else class="flex items-center">
-                  <button 
-                    @click="store.activeTabId = tab.id"
-                    @dblclick="startRenameTab(tab.id, tab.name)"
-                    class="px-4 py-4 text-xs font-bold transition-all border-b-2 whitespace-nowrap"
-                    :class="[
-                      store.activeTabId === tab.id 
-                        ? 'text-indigo-600 dark:text-indigo-400 border-indigo-600 dark:border-indigo-400' 
-                        : 'text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200 border-transparent',
-                      store.draggingIssueId ? 'bg-indigo-50/50 dark:bg-indigo-900/20' : ''
-                    ]"
-                  >
-                    {{ tab.name }}
-                  </button>
-                  <button 
-                    v-if="store.tabs.length > 1"
-                    @click.stop="handleDeleteTab(tab.id, tab.name)"
-                    class="absolute top-1 right-0 opacity-0 group-hover/tab:opacity-100 transition-opacity bg-red-500/80 hover:bg-red-500 text-white rounded-full p-0.5"
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-2 w-2" viewBox="0 0 20 20" fill="currentColor">
-                      <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
-                    </svg>
-                  </button>
-                </div>
-                
-                <!-- Drop Zone Indicator -->
-                <div v-if="store.draggingIssueId && store.activeTabId !== tab.id" class="absolute inset-0 border-2 border-dashed border-indigo-400 dark:border-indigo-500 rounded-lg pointer-events-none animate-pulse"></div>
-              </div>
-              <button 
-                @click="handleAddTab"
-                class="p-2 text-slate-400 hover:text-indigo-600 transition-colors flex-shrink-0"
-                title="Add Tab"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-                  <path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd" />
-                </svg>
-              </button>
-            </div>
+              </template>
+            </draggable>
+            <button 
+              v-if="!showTrash"
+              @click="handleAddTab"
+              class="p-2 text-slate-400 hover:text-indigo-600 transition-colors flex-shrink-0"
+              title="Add Tab"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd" />
+              </svg>
+            </button>
             <div v-else class="flex items-center px-4 py-4 text-xs font-bold text-red-600 dark:text-red-400 border-b-2 border-red-600 dark:border-red-400">
               <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
@@ -431,3 +446,33 @@ const vFocus = {
     </transition>
   </div>
 </template>
+
+<style scoped>
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.custom-scrollbar::-webkit-scrollbar {
+  width: 6px;
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 10px;
+}
+.dark .custom-scrollbar::-webkit-scrollbar-thumb {
+  background: #334155;
+}
+.ghost-class {
+  opacity: 0.5;
+  background: #eef2ff;
+}
+.dark .ghost-class {
+  background: #1e1b4b;
+}
+</style>
