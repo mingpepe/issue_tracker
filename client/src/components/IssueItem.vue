@@ -111,6 +111,13 @@ const toggleSelection = () => {
   store.toggleSelection(props.issue.id);
 };
 
+const visibleChildrenCount = computed(() => {
+  if (store.showDone) {
+    return props.issue.children.length;
+  }
+  return props.issue.children.filter(i => !i.completed).length;
+});
+
 const themeClass = computed(() => {
   if (props.issue.completed) return null;
   if (props.inheritedTheme) return props.inheritedTheme;
@@ -236,8 +243,8 @@ const themeClass = computed(() => {
                 <span class="rounded px-1.5 py-0.5 text-[10px] font-bold ring-1 ring-inset uppercase" :class="importanceConfig.className">
                   {{ importanceConfig.label }}
                 </span>
-                <span v-if="issue.children.length > 0" class="rounded bg-slate-100 dark:bg-slate-700 px-1.5 py-0.5 text-[10px] font-bold text-slate-500 dark:text-slate-400 transition-colors uppercase">
-                  {{ issue.children.length }} Sub
+                <span v-if="visibleChildrenCount > 0" class="rounded bg-slate-100 dark:bg-slate-700 px-1.5 py-0.5 text-[10px] font-bold text-slate-500 dark:text-slate-400 transition-colors uppercase">
+                  {{ visibleChildrenCount }} Sub
                 </span>
               </div>
             </div>
