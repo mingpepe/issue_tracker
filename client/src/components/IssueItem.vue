@@ -136,13 +136,22 @@ const themeClass = computed(() => {
     { card: 'bg-pink-50 border-pink-200 dark:bg-pink-900/20 dark:border-pink-500/50', accent: 'bg-pink-500' },
     { card: 'bg-violet-50 border-violet-200 dark:bg-violet-900/20 dark:border-violet-500/50', accent: 'bg-violet-500' },
     { card: 'bg-teal-50 border-teal-200 dark:bg-teal-900/20 dark:border-teal-500/50', accent: 'bg-teal-500' },
+    { card: 'bg-blue-50 border-blue-200 dark:bg-blue-900/20 dark:border-blue-500/50', accent: 'bg-blue-500' },
+    { card: 'bg-red-50 border-red-200 dark:bg-red-900/20 dark:border-red-500/50', accent: 'bg-red-500' },
+    { card: 'bg-yellow-50 border-yellow-200 dark:bg-yellow-900/20 dark:border-yellow-500/50', accent: 'bg-yellow-500' },
+    { card: 'bg-green-50 border-green-200 dark:bg-green-900/20 dark:border-green-500/50', accent: 'bg-green-500' },
+    { card: 'bg-purple-50 border-purple-200 dark:bg-purple-900/20 dark:border-purple-500/50', accent: 'bg-purple-500' },
+    { card: 'bg-slate-50 border-slate-200 dark:bg-slate-900/20 dark:border-slate-500/50', accent: 'bg-slate-500' },
   ];
   
   let hash = 0;
   for (let i = 0; i < props.issue.id.length; i++) {
-    hash = props.issue.id.charCodeAt(i) + ((hash << 5) - hash);
+    hash = (hash << 5) - hash + props.issue.id.charCodeAt(i);
+    hash |= 0; // Convert to 32bit integer
   }
-  return colors[Math.abs(hash) % colors.length];
+  // Mix in the order to further diversify if hashes collide
+  const finalIndex = Math.abs(hash + props.issue.order) % colors.length;
+  return colors[finalIndex];
 });
 </script>
 
