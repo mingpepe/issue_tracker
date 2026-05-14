@@ -79,60 +79,60 @@ const levelOptions = {
 
 <template>
   <div class="overflow-hidden rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-sm transition-colors">
-    <div class="flex items-center justify-between border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/50 px-5 py-3 transition-colors">
-      <h4 class="text-sm font-semibold text-slate-900 dark:text-slate-100">
+    <div class="flex items-center justify-between border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/50 px-4 py-1.5 transition-colors">
+      <h4 class="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
         {{ initialTitle ? 'Edit issue' : 'New issue' }}
       </h4>
       <button
         type="button"
         @click="handleCancel"
-        class="inline-flex h-8 w-8 items-center justify-center rounded-md text-slate-500 dark:text-slate-400 transition hover:bg-slate-200 dark:hover:bg-slate-700 hover:text-slate-900 dark:hover:text-slate-100"
+        class="inline-flex h-6 w-6 items-center justify-center rounded-md text-slate-400 dark:text-slate-500 transition hover:bg-slate-200 dark:hover:bg-slate-700 hover:text-slate-900 dark:hover:text-slate-100"
         aria-label="Cancel"
       >
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor">
           <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
         </svg>
       </button>
     </div>
 
-    <form @submit.prevent="handleSubmit" class="space-y-6 p-5" @keydown.esc="handleCancel">
-      <div class="space-y-2">
-        <label class="block text-sm font-medium text-slate-700 dark:text-slate-300">Title</label>
+    <form @submit.prevent="handleSubmit" class="space-y-2 p-4" @keydown.esc="handleCancel">
+      <div class="space-y-0.5">
+        <label class="block text-[10px] font-bold uppercase tracking-tight text-slate-400 dark:text-slate-500">Title</label>
         <input
           ref="titleInput"
           v-model="title"
           type="text"
           required
           @keydown.ctrl.enter="handleSubmit"
-          class="w-full rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 px-3 py-2.5 text-base text-slate-900 dark:text-slate-100 outline-none transition placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:border-blue-600 dark:focus:border-blue-500 focus:ring-3 focus:ring-blue-100 dark:focus:ring-blue-900/30"
+          class="w-full rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 px-2 py-1 text-sm text-slate-900 dark:text-slate-100 outline-none transition placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:border-blue-600 dark:focus:border-blue-500 focus:ring-2 focus:ring-blue-100 dark:focus:ring-blue-900/30"
           placeholder="A concise issue title"
         />
       </div>
       
-      <div class="space-y-2">
-        <label class="block text-sm font-medium text-slate-700 dark:text-slate-300">Description</label>
+      <div class="space-y-0.5">
+        <label class="block text-[10px] font-bold uppercase tracking-tight text-slate-400 dark:text-slate-500">Description</label>
         <textarea
           v-model="description"
           @keydown.ctrl.enter="handleSubmit"
-          class="min-h-[112px] w-full resize-y rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 px-3 py-2.5 text-sm leading-6 text-slate-800 dark:text-slate-300 outline-none transition placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:border-blue-600 dark:focus:border-blue-500 focus:ring-3 focus:ring-blue-100 dark:focus:ring-blue-900/30"
+          class="min-h-[480px] w-full resize-y rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 px-3 py-2 text-base leading-relaxed text-slate-800 dark:text-slate-300 outline-none transition placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:border-blue-600 dark:focus:border-blue-500 focus:ring-2 focus:ring-blue-100 dark:focus:ring-blue-900/30"
           placeholder="Optional context, acceptance criteria, or links"
         ></textarea>
       </div>
 
-      <div class="grid grid-cols-1 gap-5 md:grid-cols-2">
-        <div class="space-y-3">
-          <label class="block text-sm font-medium text-slate-700 dark:text-slate-300">Importance</label>
-          <div class="grid grid-cols-4 gap-1.5">
+      <div class="grid grid-cols-1 gap-3 md:grid-cols-2">
+        <div class="space-y-1">
+          <label class="block text-[10px] font-bold uppercase tracking-tight text-slate-400 dark:text-slate-500">Importance</label>
+          <div class="grid grid-cols-4 gap-1">
             <button
               v-for="opt in levelOptions.importance"
               :key="'imp-'+opt.value"
               type="button"
               @click="importance = opt.value"
               :class="[
-                'rounded-md border px-1 py-2 text-[10px] font-bold uppercase transition truncate',
+                'rounded border px-0.5 py-1 text-[8.5px] font-bold uppercase transition truncate',
                 importance === opt.value 
                   ? opt.activeClass 
-                  : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:border-slate-400 dark:hover:border-slate-500 hover:bg-slate-50 dark:hover:bg-slate-700'
+                  : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-500 dark:text-slate-400 hover:border-slate-400 dark:hover:border-slate-500 hover:bg-slate-50 dark:hover:bg-slate-700'
               ]"
               :title="opt.label"
             >
@@ -141,19 +141,19 @@ const levelOptions = {
           </div>
         </div>
 
-        <div class="space-y-3">
-          <label class="block text-sm font-medium text-slate-700 dark:text-slate-300">Urgency</label>
-          <div class="grid grid-cols-4 gap-1.5">
+        <div class="space-y-1">
+          <label class="block text-[10px] font-bold uppercase tracking-tight text-slate-400 dark:text-slate-500">Urgency</label>
+          <div class="grid grid-cols-4 gap-1">
             <button
               v-for="opt in levelOptions.urgency"
               :key="'urg-'+opt.value"
               type="button"
               @click="urgency = opt.value"
               :class="[
-                'rounded-md border px-1 py-2 text-[10px] font-bold uppercase transition truncate',
+                'rounded border px-0.5 py-1 text-[8.5px] font-bold uppercase transition truncate',
                 urgency === opt.value 
                   ? opt.activeClass 
-                  : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:border-slate-400 dark:hover:border-slate-500 hover:bg-slate-50 dark:hover:bg-slate-700'
+                  : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-500 dark:text-slate-400 hover:border-slate-400 dark:hover:border-slate-500 hover:bg-slate-50 dark:hover:bg-slate-700'
               ]"
               :title="opt.label"
             >
@@ -163,18 +163,18 @@ const levelOptions = {
         </div>
       </div>
 
-      <div class="flex items-center justify-end gap-3 border-t border-slate-100 dark:border-slate-700 pt-5 transition-colors">
+      <div class="flex items-center justify-end gap-2 border-t border-slate-100 dark:border-slate-700 pt-2 transition-colors">
         <button
           type="button"
           @click="handleCancel"
-          class="rounded-md px-3 py-2 text-sm font-medium text-slate-600 dark:text-slate-400 transition hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-slate-900 dark:hover:text-slate-100"
+          class="rounded-md px-2 py-1 text-xs font-medium text-slate-500 dark:text-slate-400 transition hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-slate-900 dark:hover:text-slate-100"
         >
           Cancel
         </button>
         <button
           type="submit"
           :disabled="!isFormValid"
-          class="rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700 disabled:bg-slate-300 dark:disabled:bg-slate-700 dark:disabled:text-slate-500"
+          class="rounded-md bg-blue-600 px-3 py-1 text-xs font-semibold text-white shadow-sm transition hover:bg-blue-700 disabled:bg-slate-300 dark:disabled:bg-slate-700 dark:disabled:text-slate-500"
         >
           {{ submitLabel }}
         </button>

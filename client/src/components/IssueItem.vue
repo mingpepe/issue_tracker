@@ -199,10 +199,23 @@ const themeClass = computed(() => {
           </button>
           
           <div 
-            class="flex-1 min-w-0 flex flex-col justify-center cursor-pointer group/text" 
+            class="flex-1 min-w-0 flex flex-col justify-center cursor-pointer group/text relative" 
             @click.stop="!issue.completed && (isEditing = true)"
-            title="Click to edit"
           >
+            <!-- Description Hover Tooltip -->
+            <div 
+              v-if="issue.description"
+              class="absolute top-full left-0 z-[100] mt-2 hidden w-80 -translate-y-1 rounded-lg border border-slate-200 bg-white p-3 shadow-xl transition-all group-hover/text:block dark:border-slate-700 dark:bg-slate-800"
+            >
+              <div class="mb-1.5 flex items-center justify-between border-b border-slate-100 pb-1 dark:border-slate-700">
+                <span class="text-[10px] font-black uppercase tracking-widest text-slate-400">Full Description</span>
+              </div>
+              <p class="whitespace-pre-wrap text-[11px] leading-relaxed text-slate-600 dark:text-slate-300">
+                {{ issue.description }}
+              </p>
+              <div class="absolute -top-1 left-6 h-2 w-2 rotate-45 border-t border-l border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-800"></div>
+            </div>
+
             <div class="flex items-center gap-3">
               <h3 
                 class="truncate text-sm font-semibold transition-all"
