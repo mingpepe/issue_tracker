@@ -16,13 +16,18 @@ const emit = defineEmits<{
 }>();
 
 const titleInput = ref<HTMLInputElement | null>(null);
+const descriptionInput = ref<HTMLTextAreaElement | null>(null);
 const title = ref(props.initialTitle || '');
 const description = ref(props.initialDescription || '');
 const importance = ref<Level>(props.initialImportance || 1);
 const urgency = ref<Level>(props.initialUrgency || 1);
 
 onMounted(() => {
-  titleInput.value?.focus();
+  if (props.initialTitle) {
+    descriptionInput.value?.focus();
+  } else {
+    titleInput.value?.focus();
+  }
 });
 
 const isDirty = computed(() => {
@@ -112,6 +117,7 @@ const levelOptions = {
       <div class="space-y-0.5">
         <label class="block text-[10px] font-bold uppercase tracking-tight text-slate-400 dark:text-slate-500">Description</label>
         <textarea
+          ref="descriptionInput"
           v-model="description"
           @keydown.ctrl.enter="handleSubmit"
           class="min-h-[480px] w-full resize-y rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 px-3 py-2 text-base leading-relaxed text-slate-800 dark:text-slate-300 outline-none transition placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:border-blue-600 dark:focus:border-blue-500 focus:ring-2 focus:ring-blue-100 dark:focus:ring-blue-900/30"
