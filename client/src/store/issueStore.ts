@@ -15,6 +15,7 @@ export const useIssueStore = defineStore('issue', () => {
   const activeTabId = ref('default');
   const loading = ref(false);
   const selectedIds = ref<Set<string>>(new Set());
+  const lastSelectedId = ref<string | null>(null);
   const showDone = ref(false);
   const draggingIssueId = ref<string | null>(null);
 
@@ -242,14 +243,19 @@ export const useIssueStore = defineStore('issue', () => {
     const newSelected = new Set(selectedIds.value);
     if (newSelected.has(id)) {
       newSelected.delete(id);
+      if (lastSelectedId.value === id) {
+        lastSelectedId.value = Array.from(newSelected).pop() || null;
+      }
     } else {
       newSelected.add(id);
+      lastSelectedId.value = id;
     }
     selectedIds.value = newSelected;
   }
 
   function clearSelection() {
     selectedIds.value = new Set();
+    lastSelectedId.value = null;
   }
 
   function bulkDelete() {
@@ -310,6 +316,7 @@ export const useIssueStore = defineStore('issue', () => {
     issues,
     loading,
     selectedIds,
+    lastSelectedId,
     showDone,
     fetchIssues,
     addTab,

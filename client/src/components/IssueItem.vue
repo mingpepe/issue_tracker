@@ -19,7 +19,6 @@ const isEditing = ref(false);
 
 const editFormRef = ref<any>(null);
 const addFormRef = ref<any>(null);
-const tooltipTriggerRef = ref<HTMLElement | null>(null);
 const showTooltip = ref(false);
 const mouseX = ref(0);
 const mouseY = ref(0);
@@ -65,6 +64,7 @@ onUnmounted(() => {
 });
 
 const isSelected = computed(() => store.selectedIds.has(props.issue.id));
+const isLastSelected = computed(() => store.lastSelectedId === props.issue.id);
 const isInWorkspace = computed(() => store.workspaceIds.includes(props.issue.id) && !props.issue.completed);
 
 const childIssues = computed({
@@ -183,6 +183,7 @@ const themeClass = computed(() => {
         themeClass ? themeClass.card : 'border-slate-200 dark:border-slate-700',
         isEditing ? 'border-blue-300 ring-4 ring-blue-100 dark:border-blue-500/50 dark:ring-blue-900/30 !cursor-default' : 'hover:border-slate-300 dark:hover:border-slate-600 hover:shadow-md hover:z-40',
         isSelected ? 'ring-2 ring-indigo-500 dark:ring-indigo-600 z-10' : '',
+        isLastSelected && !isEditing ? 'border-dashed border-amber-400 dark:border-amber-500/50 ring-2 ring-amber-500/20' : '',
         depth > 0 ? 'py-0' : ''
       ]"
     >
@@ -232,7 +233,6 @@ const themeClass = computed(() => {
           </button>
           
           <div 
-            ref="tooltipTriggerRef"
             class="flex-1 min-w-0 flex flex-col justify-center cursor-pointer group/text relative" 
             @click.stop="!issue.completed && (isEditing = true)"
             @mouseenter="handleMouseEnter"
@@ -265,6 +265,12 @@ const themeClass = computed(() => {
               </h3>
               
               <div class="flex flex-wrap items-center gap-1">
+                <span v-if="isLastSelected && !isEditing" class="rounded px-1.5 py-0.5 text-[10px] font-black bg-amber-500 text-white ring-1 ring-amber-400 uppercase tracking-tighter flex items-center gap-1">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-2 w-2" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd" />
+                  </svg>
+                  Parent Mode
+                </span>
                 <span v-if="isInWorkspace" class="rounded px-1.5 py-0.5 text-[10px] font-black bg-indigo-600 text-white ring-1 ring-indigo-500 uppercase tracking-tighter flex items-center gap-1">
                   <svg xmlns="http://www.w3.org/2000/svg" class="h-2 w-2" viewBox="0 0 20 20" fill="currentColor">
                     <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />

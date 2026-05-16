@@ -53,7 +53,7 @@ const activeIssues = computed({
 const doneIssues = computed(() => store.issues.filter(i => i.completed).sort((a, b) => b.createdAt - a.createdAt));
 
 const handleAddTopLevel = (data: { title: string; description: string; importance: Level; urgency: Level }) => {
-  store.addIssue(null, data.title, data.importance, data.urgency, data.description);
+  store.addIssue(store.lastSelectedId, data.title, data.importance, data.urgency, data.description);
   isAddingTopLevel.value = false;
 };
 
@@ -236,13 +236,14 @@ const draggableTabs = computed({
             <button 
               v-if="!showTrash"
               @click="isAddingTopLevel = !isAddingTopLevel"
-              class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-1.5 rounded-lg font-bold text-xs transition-all shadow-sm flex items-center gap-1.5 active:scale-95"
+              class="px-4 py-1.5 rounded-lg font-bold text-xs transition-all shadow-sm flex items-center gap-1.5 active:scale-95"
+              :class="store.lastSelectedId ? 'bg-amber-500 hover:bg-amber-600 text-white' : 'bg-indigo-600 hover:bg-indigo-700 text-white'"
               title="Alt + N"
             >
               <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor">
                 <path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd" />
               </svg>
-              New Task
+              {{ store.lastSelectedId ? 'New Sub-task' : 'New Task' }}
             </button>
           </div>
         </div>

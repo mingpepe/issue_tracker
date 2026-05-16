@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted, watch, nextTick } from 'vue';
+import { ref, watch, nextTick } from 'vue';
 
 const props = defineProps<{
   show: boolean;
