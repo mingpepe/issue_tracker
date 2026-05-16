@@ -3,6 +3,7 @@ import { ref, computed, onUnmounted, watch } from 'vue';
 import type { Issue, Level } from '../types';
 import { useIssueStore } from '../store/issueStore';
 import IssueForm from './IssueForm.vue';
+import Tooltip from './Tooltip.vue';
 import draggable from 'vuedraggable';
 
 const props = defineProps<{
@@ -18,6 +19,21 @@ const isEditing = ref(false);
 
 const editFormRef = ref<any>(null);
 const addFormRef = ref<any>(null);
+const tooltipTriggerRef = ref<HTMLElement | null>(null);
+const showTooltip = ref(false);
+const mouseX = ref(0);
+const mouseY = ref(0);
+
+const handleMouseMove = (e: MouseEvent) => {
+  mouseX.value = e.clientX;
+  mouseY.value = e.clientY;
+};
+
+const handleMouseEnter = (e: MouseEvent) => {
+  mouseX.value = e.clientX;
+  mouseY.value = e.clientY;
+  showTooltip.value = true;
+};
 
 const handleClickOutside = (event: MouseEvent) => {
   if (isEditing.value && editFormRef.value) {
@@ -215,13 +231,19 @@ const themeClass = computed(() => {
           </button>
           
           <div 
+            ref="tooltipTriggerRef"
             class="flex-1 min-w-0 flex flex-col justify-center cursor-pointer group/text relative" 
             @click.stop="!issue.completed && (isEditing = true)"
+            @mouseenter="handleMouseEnter"
+            @mousemove="handleMouseMove"
+            @mouseleave="showTooltip = false"
           >
             <!-- Description Hover Tooltip -->
-            <div 
+            <Tooltip 
               v-if="issue.description"
-              class="absolute top-full left-0 z-[100] mt-2 hidden w-80 -translate-y-1 rounded-lg border border-slate-200 bg-white p-3 shadow-xl transition-all group-hover/text:block dark:border-slate-700 dark:bg-slate-800"
+              :show="showTooltip"
+              :x="mouseX"
+              :y="mouseY"
             >
               <div class="mb-1.5 flex items-center justify-between border-b border-slate-100 pb-1 dark:border-slate-700">
                 <span class="text-[10px] font-black uppercase tracking-widest text-slate-400">Full Description</span>
@@ -229,8 +251,7 @@ const themeClass = computed(() => {
               <p class="whitespace-pre-wrap text-[11px] leading-relaxed text-slate-600 dark:text-slate-300">
                 {{ issue.description }}
               </p>
-              <div class="absolute -top-1 left-6 h-2 w-2 rotate-45 border-t border-l border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-800"></div>
-            </div>
+            </Tooltip>
 
             <div class="flex items-center gap-3">
               <h3 
