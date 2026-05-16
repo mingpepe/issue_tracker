@@ -177,8 +177,9 @@ const themeClass = computed(() => {
     <div v-if="depth > 0" class="absolute -left-5 top-6 h-px w-4 bg-slate-200 dark:bg-slate-700"></div>
 
     <div 
-      class="drag-handle cursor-grab group/card relative rounded-lg border bg-white dark:bg-slate-800 shadow-sm transition"
+      class="group/card relative rounded-lg border bg-white dark:bg-slate-800 shadow-sm transition"
       :class="[
+        !isEditing ? 'drag-handle cursor-grab' : '',
         themeClass ? themeClass.card : 'border-slate-200 dark:border-slate-700',
         isEditing ? 'border-blue-300 ring-4 ring-blue-100 dark:border-blue-500/50 dark:ring-blue-900/30 !cursor-default' : 'hover:border-slate-300 dark:hover:border-slate-600 hover:shadow-md hover:z-40',
         isSelected ? 'ring-2 ring-indigo-500 dark:ring-indigo-600 z-10' : '',
