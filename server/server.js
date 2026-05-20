@@ -7,13 +7,17 @@ const path = require('path');
 const app = express();
 const PORT = 3001;
 const DATA_FILE = path.join(__dirname, 'issues.json');
+const NOTES_FILE = path.join(__dirname, 'notes.txt');
 
 app.use(cors());
 app.use(bodyParser.json());
 
-// Initialize issues.json if it doesn't exist
+// Initialize files if they don't exist
 if (!fs.existsSync(DATA_FILE)) {
   fs.writeFileSync(DATA_FILE, JSON.stringify([], null, 2));
+}
+if (!fs.existsSync(NOTES_FILE)) {
+  fs.writeFileSync(NOTES_FILE, '');
 }
 
 // GET /api/issues - Retrieve all issues
@@ -36,6 +40,29 @@ app.post('/api/issues', (req, res) => {
   } catch (error) {
     console.error('Error writing issues file:', error);
     res.status(500).json({ error: 'Failed to save data' });
+  }
+});
+
+// GET /api/notes - Retrieve notes
+app.get('/api/notes', (req, res) => {
+  try {
+    const data = fs.readFileSync(NOTES_FILE, 'utf8');
+    res.json({ content: data });
+  } catch (error) {
+    console.error('Error reading notes file:', error);
+    res.status(500).json({ error: 'Failed to read notes' });
+  }
+});
+
+// POST /api/notes - Update notes
+app.post('/api/notes', (req, res) => {
+  try {
+    const { content } = req.body;
+    fs.writeFileSync(NOTES_FILE, content || '');
+    res.json({ message: 'Notes synchronized successfully' });
+  } catch (error) {
+    console.error('Error writing notes file:', error);
+    res.status(500).json({ error: 'Failed to save notes' });
   }
 });
 

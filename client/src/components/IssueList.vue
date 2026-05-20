@@ -4,6 +4,7 @@ import { useIssueStore } from '../store/issueStore';
 import IssueItem from './IssueItem.vue';
 import IssueForm from './IssueForm.vue';
 import Workspace from './Workspace.vue';
+import NotesPanel from './NotesPanel.vue';
 import draggable from 'vuedraggable';
 import type { Level } from '../types';
 
@@ -11,6 +12,7 @@ const store = useIssueStore();
 const isAddingTopLevel = ref(false);
 const showTrash = ref(false);
 const showWorkspace = ref(true);
+const showNotes = ref(false);
 const editingTabId = ref<string | null>(null);
 const editingTabName = ref('');
 
@@ -21,6 +23,9 @@ const handleGlobalKeydown = (e: KeyboardEvent) => {
   } else if (e.altKey && e.key.toLowerCase() === 'w') {
     e.preventDefault();
     showWorkspace.value = !showWorkspace.value;
+  } else if (e.altKey && e.key.toLowerCase() === 's') {
+    e.preventDefault();
+    showNotes.value = !showNotes.value;
   } else if (e.key === 'Delete') {
     if (store.selectedIds.size > 0 && !showTrash.value) {
       handleBulkDelete();
@@ -123,9 +128,23 @@ const draggableTabs = computed({
 </script>
 
 <template>
-  <div class="flex h-screen bg-slate-50 dark:bg-slate-900 transition-colors duration-300 overflow-hidden">
+  <div class="flex h-screen bg-slate-50 dark:bg-slate-900 transition-colors duration-300 overflow-hidden relative">
+    <!-- Notes Panel (Scratchpad) -->
+    <transition
+      enter-active-class="transition duration-300 ease-out"
+      enter-from-class="-translate-x-full"
+      enter-to-class="translate-x-0"
+      leave-active-class="transition duration-200 ease-in"
+      leave-from-class="translate-x-0"
+      leave-to-class="-translate-x-full"
+    >
+      <div v-if="showNotes" class="absolute left-0 top-0 bottom-0 w-80 bg-white dark:bg-slate-800 border-r border-slate-200 dark:border-slate-800 flex-shrink-0 z-40 shadow-xl">
+        <NotesPanel />
+      </div>
+    </transition>
+
     <!-- Main Content Container -->
-    <div class="flex-1 flex flex-col min-w-0">
+    <div class="flex-1 flex flex-col min-w-0 h-full">
       <!-- Compact Sophisticated Header -->
       <header class="bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 sticky top-0 z-30 shadow-sm transition-colors">
         <div class="max-w-5xl mx-auto px-6 h-14 flex items-center justify-between">
@@ -203,6 +222,17 @@ const draggableTabs = computed({
           </div>
 
           <div class="flex items-center gap-3">
+            <button 
+              @click="showNotes = !showNotes"
+              class="text-xs font-bold px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1.5"
+              :class="showNotes ? 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-400' : 'text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-200'"
+              title="Alt + S"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+              </svg>
+              Scratchpad
+            </button>
             <button 
               @click="showWorkspace = !showWorkspace"
               class="text-xs font-bold px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1.5"
@@ -441,7 +471,7 @@ const draggableTabs = computed({
       leave-from-class="translate-x-0"
       leave-to-class="translate-x-full"
     >
-      <div v-if="showWorkspace" class="w-80 border-l border-slate-200 dark:border-slate-800 flex-shrink-0 z-40">
+      <div v-if="showWorkspace" class="absolute right-0 top-0 bottom-0 w-80 bg-white dark:bg-slate-800 border-l border-slate-200 dark:border-slate-800 flex-shrink-0 z-40 shadow-xl">
         <Workspace />
       </div>
     </transition>
