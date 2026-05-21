@@ -13,6 +13,32 @@ const isAddingTopLevel = ref(false);
 const showTrash = ref(false);
 const showWorkspace = ref(true);
 const showNotes = ref(false);
+const notesWidth = ref(Number(localStorage.getItem('notesWidth')) || 320);
+const isResizingNotes = ref(false);
+
+const startResizingNotes = () => {
+  isResizingNotes.value = true;
+  document.addEventListener('mousemove', handleResizingNotes);
+  document.addEventListener('mouseup', stopResizingNotes);
+  document.body.style.cursor = 'col-resize';
+};
+
+const handleResizingNotes = (e: MouseEvent) => {
+  if (!isResizingNotes.value) return;
+  const newWidth = e.clientX;
+  if (newWidth >= 200 && newWidth <= 800) {
+    notesWidth.value = newWidth;
+  }
+};
+
+const stopResizingNotes = () => {
+  isResizingNotes.value = false;
+  localStorage.setItem('notesWidth', notesWidth.value.toString());
+  document.removeEventListener('mousemove', handleResizingNotes);
+  document.removeEventListener('mouseup', stopResizingNotes);
+  document.body.style.cursor = '';
+};
+
 const editingTabId = ref<string | null>(null);
 const editingTabName = ref('');
 
@@ -138,8 +164,17 @@ const draggableTabs = computed({
       leave-from-class="translate-x-0"
       leave-to-class="-translate-x-full"
     >
-      <div v-if="showNotes" class="absolute left-0 top-0 bottom-0 w-80 bg-white dark:bg-slate-800 border-r border-slate-200 dark:border-slate-800 flex-shrink-0 z-40 shadow-xl">
+      <div 
+        v-if="showNotes" 
+        class="absolute left-0 top-0 bottom-0 bg-white dark:bg-slate-800 border-r border-slate-200 dark:border-slate-800 flex-shrink-0 z-40 shadow-xl"
+        :style="{ width: notesWidth + 'px' }"
+      >
         <NotesPanel />
+        <!-- Resizer Handle -->
+        <div 
+          class="absolute top-0 right-0 bottom-0 w-1 cursor-col-resize hover:bg-indigo-500/30 transition-colors z-50"
+          @mousedown="startResizingNotes"
+        ></div>
       </div>
     </transition>
 
