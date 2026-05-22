@@ -1,9 +1,10 @@
 <script setup lang="ts">
-import { onMounted, watch, ref } from 'vue';
+import { onMounted, watch, ref, nextTick } from 'vue';
 import { useNoteStore } from '../store/noteStore';
 
 const store = useNoteStore();
 const localContent = ref('');
+const textareaRef = ref<HTMLTextAreaElement | null>(null);
 
 function debounce(fn: Function, delay: number) {
   let timeoutId: number | undefined;
@@ -32,6 +33,23 @@ const debouncedSync = debounce(() => {
 const handleInput = () => {
   debouncedSync();
 };
+
+const handleTab = () => {
+  const textarea = textareaRef.value;
+  if (!textarea) return;
+
+  const start = textarea.selectionStart;
+  const end = textarea.selectionEnd;
+  const val = localContent.value;
+
+  localContent.value = val.substring(0, start) + '    ' + val.substring(end);
+
+  nextTick(() => {
+    textarea.selectionStart = textarea.selectionEnd = start + 4;
+  });
+
+  handleInput();
+};
 </script>
 
 <template>
@@ -47,8 +65,11 @@ const handleInput = () => {
     </div>
     <div class="flex-1 p-0 overflow-hidden relative">
       <textarea
+        ref="textareaRef"
         v-model="localContent"
         @input="handleInput"
+        @keydown.tab.prevent="handleTab"
+        spellcheck="false"
         placeholder="Type your temporary notes here..."
         class="w-full h-full p-6 bg-transparent text-slate-700 dark:text-slate-200 resize-none outline-none text-sm leading-relaxed placeholder-slate-300 dark:placeholder-slate-600 custom-scrollbar"
       ></textarea>
