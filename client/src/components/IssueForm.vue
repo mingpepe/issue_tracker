@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, onMounted, nextTick } from 'vue';
 import type { Level } from '../types';
 
 const props = defineProps<{
@@ -62,6 +62,21 @@ const handleSubmit = () => {
   });
 };
 
+const handleTab = () => {
+  const textarea = descriptionInput.value;
+  if (!textarea) return;
+
+  const start = textarea.selectionStart;
+  const end = textarea.selectionEnd;
+  const val = description.value;
+
+  description.value = val.substring(0, start) + '    ' + val.substring(end);
+
+  nextTick(() => {
+    textarea.selectionStart = textarea.selectionEnd = start + 4;
+  });
+};
+
 defineExpose({
   handleCancel
 });
@@ -108,6 +123,7 @@ const levelOptions = {
           v-model="title"
           type="text"
           required
+          spellcheck="false"
           @keydown.ctrl.enter="handleSubmit"
           class="w-full rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 px-2 py-1 text-sm text-slate-900 dark:text-slate-100 outline-none transition placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:border-blue-600 dark:focus:border-blue-500 focus:ring-2 focus:ring-blue-100 dark:focus:ring-blue-900/30"
           placeholder="A concise issue title"
@@ -119,6 +135,8 @@ const levelOptions = {
         <textarea
           ref="descriptionInput"
           v-model="description"
+          spellcheck="false"
+          @keydown.tab.prevent="handleTab"
           @keydown.ctrl.enter="handleSubmit"
           class="min-h-[480px] w-full resize-y rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 px-3 py-2 text-base leading-relaxed text-slate-800 dark:text-slate-300 outline-none transition placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:border-blue-600 dark:focus:border-blue-500 focus:ring-2 focus:ring-blue-100 dark:focus:ring-blue-900/30"
           placeholder="Optional context, acceptance criteria, or links"
