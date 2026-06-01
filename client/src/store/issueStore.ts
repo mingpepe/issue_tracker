@@ -307,6 +307,57 @@ export const useIssueStore = defineStore('issue', () => {
     return undefined;
   }
 
+  const selectableIssuesInActiveTab = computed(() => {
+    const list: Issue[] = [];
+    const collect = (arr: Issue[]) => {
+      arr.forEach(issue => {
+        if (!issue.completed || showDone.value) {
+          list.push(issue);
+        }
+        if (issue.children && issue.children.length > 0) {
+          collect(issue.children);
+        }
+      });
+    };
+    collect(issues.value);
+    return list;
+  });
+
+  const isAllSelected = computed(() => {
+    const selectable = selectableIssuesInActiveTab.value;
+    if (selectable.length === 0) return false;
+    return selectable.every(issue => selectedIds.value.has(issue.id));
+  });
+
+  const isSomeSelected = computed(() => {
+    const selectable = selectableIssuesInActiveTab.value;
+    if (selectable.length === 0) return false;
+    const selectedCount = selectable.filter(issue => selectedIds.value.has(issue.id)).length;
+    return selectedCount > 0 && selectedCount < selectable.length;
+  });
+
+  function toggleSelectAll() {
+    if (isAllSelected.value) {
+      const newSelected = new Set(selectedIds.value);
+      selectableIssuesInActiveTab.value.forEach(issue => {
+        newSelected.delete(issue.id);
+      });
+      selectedIds.value = newSelected;
+      if (lastSelectedId.value && !selectedIds.value.has(lastSelectedId.value)) {
+        lastSelectedId.value = Array.from(selectedIds.value).pop() || null;
+      }
+    } else {
+      const newSelected = new Set(selectedIds.value);
+      selectableIssuesInActiveTab.value.forEach(issue => {
+        newSelected.add(issue.id);
+      });
+      selectedIds.value = newSelected;
+      if (selectableIssuesInActiveTab.value.length > 0) {
+        lastSelectedId.value = selectableIssuesInActiveTab.value[selectableIssuesInActiveTab.value.length - 1].id;
+      }
+    }
+  }
+
   return {
     tabs,
     trash,
@@ -339,5 +390,9 @@ export const useIssueStore = defineStore('issue', () => {
     clearWorkspace,
     reorderWorkspace,
     draggingIssueId,
+    selectableIssuesInActiveTab,
+    isAllSelected,
+    isSomeSelected,
+    toggleSelectAll,
   };
 });

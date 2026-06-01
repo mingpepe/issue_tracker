@@ -291,6 +291,31 @@ const draggableTabs = computed({
               <span v-if="store.trash.length > 0 && !showTrash" class="bg-red-500 text-white text-[10px] px-1.5 rounded-full">{{ store.trash.length }}</span>
             </button>
             <button 
+              v-if="!showTrash && store.selectableIssuesInActiveTab.length > 0"
+              @click="store.toggleSelectAll"
+              class="text-xs font-bold px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1.5 select-none"
+              :class="[
+                store.isAllSelected ? 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-400' : 
+                store.isSomeSelected ? 'bg-indigo-50/50 text-indigo-600 dark:bg-indigo-950/20 dark:text-indigo-400' : 
+                'text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-200'
+              ]"
+            >
+              <span 
+                class="flex h-3.5 w-3.5 items-center justify-center rounded border transition-all"
+                :class="[
+                  store.isAllSelected ? 'bg-indigo-600 border-indigo-600 dark:bg-indigo-500 dark:border-indigo-500' : 
+                  store.isSomeSelected ? 'border-indigo-500 dark:border-indigo-500 bg-indigo-50 dark:bg-indigo-950/40' : 
+                  'border-slate-300 dark:border-slate-600 hover:border-indigo-500'
+                ]"
+              >
+                <span v-if="store.isSomeSelected" class="h-0.5 w-1.5 bg-indigo-600 dark:bg-indigo-400 rounded-full"></span>
+                <svg v-else-if="store.isAllSelected" xmlns="http://www.w3.org/2000/svg" class="h-2.5 w-2.5 text-white" viewBox="0 0 20 20" fill="currentColor">
+                  <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
+                </svg>
+              </span>
+              <span>{{ store.isAllSelected ? 'Deselect All' : 'Select All' }}</span>
+            </button>
+            <button 
               v-if="!showTrash"
               @click="store.showDone = !store.showDone"
               class="text-xs font-bold px-3 py-1.5 rounded-lg transition-colors"
