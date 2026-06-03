@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { onMounted, onUnmounted, ref, computed } from 'vue';
 import { useIssueStore } from '../store/issueStore';
+import { useNoteStore } from '../store/noteStore';
 import IssueItem from './IssueItem.vue';
 import IssueForm from './IssueForm.vue';
 import Workspace from './Workspace.vue';
@@ -9,6 +10,11 @@ import draggable from 'vuedraggable';
 import type { Level } from '../types';
 
 const store = useIssueStore();
+const noteStore = useNoteStore();
+
+const isOffline = computed(() => store.isOffline || noteStore.isOffline);
+const hasPendingSync = computed(() => store.hasPendingSync || noteStore.hasPendingSync);
+
 const isAddingTopLevel = ref(false);
 const showTrash = ref(false);
 const showWorkspace = ref(true);
@@ -257,6 +263,29 @@ const draggableTabs = computed({
           </div>
 
           <div class="flex items-center gap-3">
+            <!-- Sync/Network Status Badge -->
+            <transition name="fade">
+              <div 
+                v-if="isOffline || hasPendingSync" 
+                class="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border transition-all duration-300 mr-2"
+                :class="[
+                  isOffline 
+                    ? 'bg-amber-50 dark:bg-amber-950/20 text-amber-600 dark:text-amber-400 border-amber-200 dark:border-amber-900/30' 
+                    : 'bg-indigo-50 dark:bg-indigo-950/20 text-indigo-600 dark:text-indigo-400 border-indigo-200 dark:border-indigo-900/30'
+                ]"
+              >
+                <!-- Offline Icon -->
+                <svg v-if="isOffline" xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 animate-pulse" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 5.636a9 9 0 010 12.728m0 0l-2.829-2.829m2.829 2.829L21 21M15.536 8.464a5 5 0 010 7.072m0 0l-2.829-2.829m-4.243 2.829a4.978 4.978 0 01-1.414-3.536 4.978 4.978 0 011.414-3.536m0 0L8.536 12m-4.243-3.536a9 9 0 000 12.728m0 0l2.829-2.829M12 12v.01" />
+                </svg>
+                <!-- Pending Sync Icon (Spinner) -->
+                <svg v-else xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 animate-spin" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 1121.21 8H18.235" />
+                </svg>
+                <span>{{ isOffline ? 'Offline' : 'Syncing' }}</span>
+              </div>
+            </transition>
+
             <button 
               @click="showNotes = !showNotes"
               class="text-xs font-bold px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1.5"

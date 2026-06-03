@@ -19,6 +19,20 @@ export const useIssueStore = defineStore('issue', () => {
   const showDone = ref(false);
   const draggingIssueId = ref<string | null>(null);
 
+  const isOffline = ref(!navigator.onLine);
+  const hasPendingSync = ref(localStorage.getItem('issues_pending_sync') === 'true');
+
+  window.addEventListener('online', () => {
+    isOffline.value = false;
+    if (hasPendingSync.value) {
+      syncIssues();
+    }
+  });
+
+  window.addEventListener('offline', () => {
+    isOffline.value = true;
+  });
+
   const activeTab = computed(() => {
     return tabs.value.find(t => t.id === activeTabId.value) || tabs.value[0];
   });
@@ -37,50 +51,73 @@ export const useIssueStore = defineStore('issue', () => {
       .filter((issue): issue is Issue => !!issue);
   });
 
+  function loadDataIntoStore(data: any) {
+    if (data && typeof data === 'object' && !Array.isArray(data)) {
+      tabs.value = data.tabs || [{ id: 'default', name: 'Main', issues: [] }];
+      trash.value = data.trash || [];
+      workspaceIds.value = data.workspaceIds || [];
+    } else if (Array.isArray(data)) {
+      if (data.length > 0 && 'id' in data[0] && !('issues' in data[0])) {
+        tabs.value = [{ id: 'default', name: 'Main', issues: data }];
+      } else if (data.length > 0 && 'issues' in data[0]) {
+        tabs.value = data;
+      } else {
+        tabs.value = [{ id: 'default', name: 'Main', issues: [] }];
+      }
+      trash.value = [];
+      workspaceIds.value = [];
+    }
+    
+    if (tabs.value.length > 0 && !tabs.value.find(t => t.id === activeTabId.value)) {
+      activeTabId.value = tabs.value[0].id;
+    }
+  }
+
   async function fetchIssues() {
     loading.value = true;
     try {
       const response = await axios.get<any>(API_URL);
       const data = response.data;
       
-      // Migration/Loading logic
-      if (data && typeof data === 'object' && !Array.isArray(data)) {
-        // New structure with tabs and trash
-        tabs.value = data.tabs || [{ id: 'default', name: 'Main', issues: [] }];
-        trash.value = data.trash || [];
-        workspaceIds.value = data.workspaceIds || [];
-      } else if (Array.isArray(data)) {
-        // Migration from old array-only format
-        if (data.length > 0 && 'id' in data[0] && !('issues' in data[0])) {
-          tabs.value = [{ id: 'default', name: 'Main', issues: data }];
-        } else if (data.length > 0 && 'issues' in data[0]) {
-          tabs.value = data;
-        } else {
-          tabs.value = [{ id: 'default', name: 'Main', issues: [] }];
-        }
-        trash.value = [];
-        workspaceIds.value = [];
-      }
-      
-      if (tabs.value.length > 0 && !tabs.value.find(t => t.id === activeTabId.value)) {
-        activeTabId.value = tabs.value[0].id;
-      }
+      localStorage.setItem('cached_issues', JSON.stringify(data));
+      isOffline.value = false;
+      loadDataIntoStore(data);
     } catch (error) {
-      console.error('Failed to fetch issues:', error);
+      console.error('Failed to fetch issues, attempting local cache fallback:', error);
+      isOffline.value = true;
+      const cached = localStorage.getItem('cached_issues');
+      if (cached) {
+        try {
+          const data = JSON.parse(cached);
+          loadDataIntoStore(data);
+        } catch (e) {
+          console.error('Failed to parse cached issues:', e);
+        }
+      }
     } finally {
       loading.value = false;
     }
   }
 
   async function syncIssues() {
+    const payload = {
+      tabs: tabs.value,
+      trash: trash.value,
+      workspaceIds: workspaceIds.value
+    };
+    
+    localStorage.setItem('cached_issues', JSON.stringify(payload));
+    
     try {
-      await axios.post(API_URL, {
-        tabs: tabs.value,
-        trash: trash.value,
-        workspaceIds: workspaceIds.value
-      });
+      await axios.post(API_URL, payload);
+      isOffline.value = false;
+      hasPendingSync.value = false;
+      localStorage.setItem('issues_pending_sync', 'false');
     } catch (error) {
-      console.error('Failed to sync issues:', error);
+      console.error('Failed to sync issues, saving locally:', error);
+      isOffline.value = true;
+      hasPendingSync.value = true;
+      localStorage.setItem('issues_pending_sync', 'true');
     }
   }
 
@@ -394,5 +431,7 @@ export const useIssueStore = defineStore('issue', () => {
     isAllSelected,
     isSomeSelected,
     toggleSelectAll,
+    isOffline,
+    hasPendingSync,
   };
 });

@@ -28,3 +28,6 @@ pnpm-debug.log*
 
 # Project specific
 server/issues.json
+
+# AI Agent Skills
+*.skill
