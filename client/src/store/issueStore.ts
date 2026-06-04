@@ -433,5 +433,6 @@ export const useIssueStore = defineStore('issue', () => {
     toggleSelectAll,
     isOffline,
     hasPendingSync,
+    findIssueByIdInAllTabs,
   };
 });
