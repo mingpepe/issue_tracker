@@ -14,6 +14,26 @@ const props = defineProps<{
 
 const store = useIssueStore();
 const isExpanded = ref(true);
+
+const isDescendant = (parentId: string, childId: string): boolean => {
+  const parent = store.findIssueByIdInAllTabs(parentId);
+  if (!parent) return false;
+  
+  const check = (list: any[]): boolean => {
+    for (const item of list) {
+      if (item.id === childId) return true;
+      if (item.children && check(item.children)) return true;
+    }
+    return false;
+  };
+  
+  return check(parent.children);
+};
+
+const isDescendantOfDragged = computed(() => {
+  if (!store.draggingIssueId) return false;
+  return isDescendant(store.draggingIssueId, props.issue.id);
+});
 const isAddingChild = ref(false);
 const isEditing = ref(false);
 
@@ -38,7 +58,7 @@ const handleClickOutside = (event: MouseEvent) => {
   if (isEditing.value && editFormRef.value) {
     const el = editFormRef.value.$el || editFormRef.value;
     if (!el.contains(event.target as Node)) {
-      editFormRef.value.handleCancel();
+      editFormRef.value.saveOnOutsideClick();
     }
   }
   if (isAddingChild.value && addFormRef.value) {
@@ -49,18 +69,20 @@ const handleClickOutside = (event: MouseEvent) => {
   }
 };
 
-watch([isEditing, isAddingChild], ([newEdit, newAdd]) => {
+watch([isEditing, isAddingChild, () => store.draggingIssueId], ([newEdit, newAdd]) => {
+  showTooltip.value = false;
   if (newEdit || newAdd) {
     setTimeout(() => {
-      document.addEventListener('click', handleClickOutside);
+      document.addEventListener('click', handleClickOutside, true);
     }, 0);
   } else {
-    document.removeEventListener('click', handleClickOutside);
+    document.removeEventListener('click', handleClickOutside, true);
   }
 });
 
 onUnmounted(() => {
-  document.removeEventListener('click', handleClickOutside);
+  document.removeEventListener('click', handleClickOutside, true);
+  showTooltip.value = false;
 });
 
 const isSelected = computed(() => store.selectedIds.has(props.issue.id));
@@ -366,11 +388,27 @@ const themeClass = computed(() => {
         item-key="id"
         handle=".drag-handle"
         ghost-class="ghost-class"
-        class="space-y-1 min-h-[4px]"
+        class="space-y-1 transition-all duration-200"
+        :class="[
+          store.draggingIssueId && 
+          store.draggingIssueId !== issue.id && 
+          !isDescendantOfDragged &&
+          childIssues.length === 0
+            ? 'min-h-[44px] border border-dashed border-slate-300 dark:border-slate-700 rounded-xl bg-slate-50/20 dark:bg-slate-900/10 flex items-center justify-center'
+            : 'min-h-[4px]'
+        ]"
         :group="{ name: 'issues' }"
         @start="store.draggingIssueId = ($event.item as any)._underlying_vm_.id"
         @end="store.draggingIssueId = null"
       >
+        <template #header>
+          <div 
+            v-if="store.draggingIssueId && store.draggingIssueId !== issue.id && !isDescendantOfDragged && childIssues.length === 0" 
+            class="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest select-none pointer-events-none py-2"
+          >
+            ➕ Drop here to make sub-task
+          </div>
+        </template>
         <template #item="{ element }">
           <IssueItem 
             :issue="element" 
