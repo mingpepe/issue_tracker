@@ -77,8 +77,21 @@ const handleTab = () => {
   });
 };
 
+const saveOnOutsideClick = () => {
+  if (isFormValid.value) {
+    if (isDirty.value) {
+      handleSubmit();
+    } else {
+      emit('cancel');
+    }
+  } else {
+    emit('cancel');
+  }
+};
+
 defineExpose({
-  handleCancel
+  handleCancel,
+  saveOnOutsideClick
 });
 
 const levelOptions = {
