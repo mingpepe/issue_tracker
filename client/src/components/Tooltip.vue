@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, watch, nextTick } from 'vue';
+import { ref, watch, nextTick, onUnmounted } from 'vue';
 
 const props = defineProps<{
   show: boolean;
@@ -8,6 +8,19 @@ const props = defineProps<{
 }>();
 
 const tooltipRef = ref<HTMLElement | null>(null);
+let elementToClean: HTMLElement | null = null;
+
+watch(tooltipRef, (el) => {
+  if (el) {
+    elementToClean = el;
+  }
+});
+
+onUnmounted(() => {
+  if (elementToClean && elementToClean.parentNode) {
+    elementToClean.parentNode.removeChild(elementToClean);
+  }
+});
 const position = ref({ top: 0, left: 0 });
 const placement = ref<'top' | 'bottom'>('bottom');
 
