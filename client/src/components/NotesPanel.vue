@@ -34,21 +34,109 @@ const handleInput = () => {
   debouncedSync();
 };
 
-const handleTab = () => {
+const handleTab = (e: KeyboardEvent) => {
   const textarea = textareaRef.value;
   if (!textarea) return;
 
   const start = textarea.selectionStart;
   const end = textarea.selectionEnd;
   const val = localContent.value;
+  const isShift = e.shiftKey;
 
-  localContent.value = val.substring(0, start) + '    ' + val.substring(end);
-
-  nextTick(() => {
-    textarea.selectionStart = textarea.selectionEnd = start + 4;
+  const lines = val.split('\n');
+  let currentPos = 0;
+  const lineStartIndices = lines.map(line => {
+    const s = currentPos;
+    currentPos += line.length + 1;
+    return s;
   });
 
+  let startLineIdx = 0;
+  let endLineIdx = 0;
+  for (let i = 0; i < lineStartIndices.length; i++) {
+    if (start >= lineStartIndices[i]) {
+      startLineIdx = i;
+    }
+    if (end >= lineStartIndices[i]) {
+      endLineIdx = i;
+    }
+  }
+
+  if (start === end && !isShift) {
+    // Single cursor, normal Tab: insert 8 spaces at cursor
+    localContent.value = val.substring(0, start) + '        ' + val.substring(end);
+    nextTick(() => {
+      textarea.selectionStart = textarea.selectionEnd = start + 8;
+    });
+  } else {
+    // Selection, or Shift+Tab (outdent)
+    let deltaStart = 0;
+    let deltaEnd = 0;
+    const updatedLines = [...lines];
+
+    for (let i = startLineIdx; i <= endLineIdx; i++) {
+      const lineStart = lineStartIndices[i];
+      const originalLine = lines[i];
+      let newLine = originalLine;
+
+      if (!isShift) {
+        // Indent: add 8 spaces to the start of the line
+        newLine = '        ' + originalLine;
+
+        if (i === startLineIdx) {
+          deltaStart += 8;
+        }
+        if (i === endLineIdx) {
+          deltaEnd += 8;
+        } else if (i < endLineIdx) {
+          deltaEnd += 8;
+        }
+      } else {
+        // Outdent: remove up to 8 spaces or 1 tab from the start of the line
+        let spaceCount = 0;
+        const isTab = originalLine[0] === '\t';
+        if (isTab) {
+          spaceCount = 1;
+        } else {
+          while (spaceCount < 8 && originalLine[spaceCount] === ' ') {
+            spaceCount++;
+          }
+        }
+
+        if (spaceCount > 0) {
+          newLine = originalLine.substring(spaceCount);
+
+          if (i === startLineIdx) {
+            const offset = start - lineStart;
+            deltaStart -= Math.min(offset, spaceCount);
+          }
+          if (i === endLineIdx) {
+            const offset = end - lineStart;
+            deltaEnd -= Math.min(offset, spaceCount);
+          } else if (i < endLineIdx) {
+            deltaEnd -= spaceCount;
+          }
+        }
+      }
+
+      updatedLines[i] = newLine;
+    }
+
+    localContent.value = updatedLines.join('\n');
+    nextTick(() => {
+      textarea.selectionStart = start + deltaStart;
+      textarea.selectionEnd = end + deltaEnd;
+    });
+  }
+
   handleInput();
+};
+
+const handleKeyDown = (e: KeyboardEvent) => {
+  if (e.key === 'Tab') {
+    e.preventDefault();
+    handleTab(e);
+  }
 };
 </script>
 
@@ -68,7 +156,7 @@ const handleTab = () => {
         ref="textareaRef"
         v-model="localContent"
         @input="handleInput"
-        @keydown.tab.prevent="handleTab"
+        @keydown="handleKeyDown"
         spellcheck="false"
         placeholder="Type your temporary notes here..."
         class="w-full h-full p-6 bg-transparent text-slate-700 dark:text-slate-200 resize-none outline-none text-sm leading-relaxed placeholder-slate-300 dark:placeholder-slate-600 custom-scrollbar"

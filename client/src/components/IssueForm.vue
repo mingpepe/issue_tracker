@@ -62,19 +62,107 @@ const handleSubmit = () => {
   });
 };
 
-const handleTab = () => {
+const handleTab = (e: KeyboardEvent) => {
   const textarea = descriptionInput.value;
   if (!textarea) return;
 
   const start = textarea.selectionStart;
   const end = textarea.selectionEnd;
   const val = description.value;
+  const isShift = e.shiftKey;
 
-  description.value = val.substring(0, start) + '    ' + val.substring(end);
-
-  nextTick(() => {
-    textarea.selectionStart = textarea.selectionEnd = start + 4;
+  const lines = val.split('\n');
+  let currentPos = 0;
+  const lineStartIndices = lines.map(line => {
+    const s = currentPos;
+    currentPos += line.length + 1;
+    return s;
   });
+
+  let startLineIdx = 0;
+  let endLineIdx = 0;
+  for (let i = 0; i < lineStartIndices.length; i++) {
+    if (start >= lineStartIndices[i]) {
+      startLineIdx = i;
+    }
+    if (end >= lineStartIndices[i]) {
+      endLineIdx = i;
+    }
+  }
+
+  if (start === end && !isShift) {
+    // Single cursor, normal Tab: insert 8 spaces at cursor
+    description.value = val.substring(0, start) + '        ' + val.substring(end);
+    nextTick(() => {
+      textarea.selectionStart = textarea.selectionEnd = start + 8;
+    });
+  } else {
+    // Selection, or Shift+Tab (outdent)
+    let deltaStart = 0;
+    let deltaEnd = 0;
+    const updatedLines = [...lines];
+
+    for (let i = startLineIdx; i <= endLineIdx; i++) {
+      const lineStart = lineStartIndices[i];
+      const originalLine = lines[i];
+      let newLine = originalLine;
+
+      if (!isShift) {
+        // Indent: add 8 spaces to the start of the line
+        newLine = '        ' + originalLine;
+
+        if (i === startLineIdx) {
+          deltaStart += 8;
+        }
+        if (i === endLineIdx) {
+          deltaEnd += 8;
+        } else if (i < endLineIdx) {
+          deltaEnd += 8;
+        }
+      } else {
+        // Outdent: remove up to 8 spaces or 1 tab from the start of the line
+        let spaceCount = 0;
+        const isTab = originalLine[0] === '\t';
+        if (isTab) {
+          spaceCount = 1;
+        } else {
+          while (spaceCount < 8 && originalLine[spaceCount] === ' ') {
+            spaceCount++;
+          }
+        }
+
+        if (spaceCount > 0) {
+          newLine = originalLine.substring(spaceCount);
+
+          if (i === startLineIdx) {
+            const offset = start - lineStart;
+            deltaStart -= Math.min(offset, spaceCount);
+          }
+          if (i === endLineIdx) {
+            const offset = end - lineStart;
+            deltaEnd -= Math.min(offset, spaceCount);
+          } else if (i < endLineIdx) {
+            deltaEnd -= spaceCount;
+          }
+        }
+      }
+
+      updatedLines[i] = newLine;
+    }
+
+    description.value = updatedLines.join('\n');
+    nextTick(() => {
+      textarea.selectionStart = start + deltaStart;
+      textarea.selectionEnd = end + deltaEnd;
+    });
+  }
+};
+
+const handleKeyDown = (e: KeyboardEvent) => {
+  if (e.key === 'Tab') {
+    e.preventDefault();
+    handleTab(e);
+  }
 };
 
 const saveOnOutsideClick = () => {
@@ -149,7 +237,7 @@ const levelOptions = {
           ref="descriptionInput"
           v-model="description"
           spellcheck="false"
-          @keydown.tab.prevent="handleTab"
+          @keydown="handleKeyDown"
           @keydown.ctrl.enter="handleSubmit"
           class="min-h-[480px] w-full resize-y rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 px-3 py-2 text-base leading-relaxed text-slate-800 dark:text-slate-300 outline-none transition placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:border-blue-600 dark:focus:border-blue-500 focus:ring-2 focus:ring-blue-100 dark:focus:ring-blue-900/30"
           placeholder="Optional context, acceptance criteria, or links"
