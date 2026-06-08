@@ -68,7 +68,7 @@ const handleTab = (e: KeyboardEvent) => {
 
   const start = textarea.selectionStart;
   const end = textarea.selectionEnd;
-  const val = description.value;
+  const val = (description.value || '').replace(/\r\n/g, '\n');
   const isShift = e.shiftKey;
 
   const lines = val.split('\n');
