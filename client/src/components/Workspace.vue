@@ -91,9 +91,20 @@ const onDrop = () => {
       >
         <template #item="{ element }">
           <div 
-            class="drag-handle cursor-grab group relative bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl p-3 shadow-sm hover:shadow-md transition-all flex items-center gap-3"
+            class="group relative bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl p-3 shadow-sm hover:shadow-md transition-all flex items-center gap-3"
             :class="{ 'opacity-50 grayscale': element.completed }"
           >
+            <!-- Drag Handle Grip -->
+            <div 
+              class="drag-handle flex h-6 w-5 flex-shrink-0 items-center justify-center rounded text-slate-400 dark:text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-700/50 hover:text-slate-600 dark:hover:text-slate-300 cursor-grab active:cursor-grabbing transition"
+              title="Drag to reorder"
+              @click.stop
+            >
+              <svg class="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor">
+                <path d="M7 4a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zM7 10a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zM7 16a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zM13 4a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zM13 10a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zM13 16a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0z" />
+              </svg>
+            </div>
+
             <!-- Complete Toggle -->
             <button 
               @click.stop="toggleDone(element.id)"

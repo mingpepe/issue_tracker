@@ -34,6 +34,28 @@ const isDescendantOfDragged = computed(() => {
   if (!store.draggingIssueId) return false;
   return isDescendant(store.draggingIssueId, props.issue.id);
 });
+
+const dragCounter = ref(0);
+const isDragOver = computed(() => dragCounter.value > 0);
+
+const handleDragEnter = () => {
+  if (store.draggingIssueId && store.draggingIssueId !== props.issue.id && !isDescendantOfDragged.value) {
+    dragCounter.value++;
+  }
+};
+
+const handleDragLeave = () => {
+  if (store.draggingIssueId && store.draggingIssueId !== props.issue.id && !isDescendantOfDragged.value) {
+    dragCounter.value--;
+  }
+};
+
+watch(() => store.draggingIssueId, (newId) => {
+  if (!newId) {
+    dragCounter.value = 0;
+  }
+});
+
 const isAddingChild = ref(false);
 const isEditing = ref(false);
 
@@ -194,16 +216,20 @@ const themeClass = computed(() => {
 </script>
 
 <template>
-  <div class="relative group/item" :class="{ 'opacity-60': issue.completed }">
+  <div 
+    class="relative group/item" 
+    :class="{ 'opacity-60': issue.completed }"
+    @dragenter="handleDragEnter"
+    @dragleave="handleDragLeave"
+  >
     <div v-if="depth > 0" class="absolute -left-5 bottom-0 top-0 w-px bg-slate-200 dark:bg-slate-700 group-last/item:bottom-1/2"></div>
     <div v-if="depth > 0" class="absolute -left-5 top-6 h-px w-4 bg-slate-200 dark:bg-slate-700"></div>
 
     <div 
       class="group/card relative rounded-lg border bg-white dark:bg-slate-800 shadow-sm transition"
       :class="[
-        !isEditing ? 'drag-handle cursor-grab' : '',
         themeClass ? themeClass.card : 'border-slate-200 dark:border-slate-700',
-        isEditing ? 'border-blue-300 ring-4 ring-blue-100 dark:border-blue-500/50 dark:ring-blue-900/30 !cursor-default' : 'hover:border-slate-300 dark:hover:border-slate-600 hover:shadow-md hover:z-40',
+        isEditing ? 'border-blue-300 ring-4 ring-blue-100 dark:border-blue-500/50 dark:ring-blue-900/30' : 'hover:border-slate-300 dark:hover:border-slate-600 hover:shadow-md hover:z-40',
         isSelected ? 'ring-2 ring-indigo-500 dark:ring-indigo-600 z-10' : '',
         isLastSelected && !isEditing ? 'border-dashed border-amber-400 dark:border-amber-500/50 ring-2 ring-amber-500/20' : '',
         depth > 0 ? 'py-0' : ''
@@ -216,31 +242,47 @@ const themeClass = computed(() => {
       <div class="absolute bottom-0 left-0 top-0 w-1 overflow-hidden rounded-l-lg" :class="[urgencyConfig.accent, themeClass ? 'ml-2' : '']"></div>
 
       <div v-if="!isEditing" class="flex flex-col gap-2 p-1.5 pl-4 sm:flex-row sm:items-center" :class="{ 'sm:gap-1': depth > 0 }">
-        <!-- Selection Checkbox -->
-        <div class="flex items-center" @click.stop>
-          <button 
-            @click="toggleSelection"
-            class="flex h-4 w-4 items-center justify-center rounded border transition-all"
-            :class="isSelected ? 'bg-indigo-600 border-indigo-600' : 'border-slate-300 dark:border-slate-600 hover:border-indigo-500'"
+        <div class="flex items-center gap-2">
+          <!-- Drag Handle Grip -->
+          <div 
+            v-if="!issue.completed"
+            class="drag-handle flex h-6 w-5 flex-shrink-0 items-center justify-center rounded text-slate-400 dark:text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-700/50 hover:text-slate-600 dark:hover:text-slate-300 cursor-grab active:cursor-grabbing transition"
+            title="Drag to reorder"
+            @click.stop
           >
-            <svg v-if="isSelected" xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 text-white" viewBox="0 0 20 20" fill="currentColor">
-              <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
+            <svg class="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor">
+              <path d="M7 4a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zM7 10a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zM7 16a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zM13 4a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zM13 10a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zM13 16a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0z" />
+            </svg>
+          </div>
+          <div v-else class="w-5 h-6 flex-shrink-0"></div>
+
+          <!-- Selection Checkbox -->
+          <div class="flex items-center" @click.stop>
+            <button 
+              @click="toggleSelection"
+              class="flex h-4 w-4 items-center justify-center rounded border transition-all"
+              :class="isSelected ? 'bg-indigo-600 border-indigo-600' : 'border-slate-300 dark:border-slate-600 hover:border-indigo-500'"
+            >
+              <svg v-if="isSelected" xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 text-white" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
+              </svg>
+            </button>
+          </div>
+
+          <!-- Expand button -->
+          <button 
+            v-if="issue.children.length > 0"
+            @click.stop="isExpanded = !isExpanded"
+            class="inline-flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-md border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-500 dark:text-slate-400 transition hover:bg-slate-50 dark:hover:bg-slate-700 hover:text-slate-900 dark:hover:text-slate-100"
+            aria-label="Toggle child issues"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 transition-transform" :class="isExpanded ? 'rotate-0' : '-rotate-90'" viewBox="0 0 20 20" fill="currentColor">
+              <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
             </svg>
           </button>
-        </div>
-
-        <button 
-          v-if="issue.children.length > 0"
-          @click.stop="isExpanded = !isExpanded"
-          class="inline-flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-md border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-500 dark:text-slate-400 transition hover:bg-slate-50 dark:hover:bg-slate-700 hover:text-slate-900 dark:hover:text-slate-100"
-          aria-label="Toggle child issues"
-        >
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 transition-transform" :class="isExpanded ? 'rotate-0' : '-rotate-90'" viewBox="0 0 20 20" fill="currentColor">
-            <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
-          </svg>
-        </button>
-        <div v-else class="hidden h-6 w-6 flex-shrink-0 items-center justify-center sm:flex">
-          <span class="h-1.5 w-1.5 rounded-full" :class="urgencyConfig.accent"></span>
+          <div v-else class="hidden h-6 w-6 flex-shrink-0 items-center justify-center sm:flex">
+            <span class="h-1.5 w-1.5 rounded-full" :class="urgencyConfig.accent"></span>
+          </div>
         </div>
 
         <div class="flex-1 min-w-0 flex items-center gap-3">
@@ -393,18 +435,22 @@ const themeClass = computed(() => {
           store.draggingIssueId && 
           store.draggingIssueId !== issue.id && 
           !isDescendantOfDragged &&
-          childIssues.length === 0
-            ? 'min-h-[44px] border border-dashed border-slate-300 dark:border-slate-700 rounded-xl bg-slate-50/20 dark:bg-slate-900/10 flex items-center justify-center'
+          childIssues.length === 0 &&
+          isDragOver
+            ? 'min-h-[44px] border border-dashed border-indigo-300 dark:border-indigo-700 rounded-xl bg-indigo-50/10 dark:bg-indigo-900/5 flex items-center justify-center'
             : 'min-h-[4px]'
         ]"
         :group="{ name: 'issues' }"
         @start="store.draggingIssueId = ($event.item as any)._underlying_vm_.id"
         @end="store.draggingIssueId = null"
+        @pointerdown.stop
+        @mousedown.stop
+        @touchstart.stop
       >
         <template #header>
           <div 
-            v-if="store.draggingIssueId && store.draggingIssueId !== issue.id && !isDescendantOfDragged && childIssues.length === 0" 
-            class="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest select-none pointer-events-none py-2"
+            v-if="store.draggingIssueId && store.draggingIssueId !== issue.id && !isDescendantOfDragged && childIssues.length === 0 && isDragOver" 
+            class="text-[10px] font-bold text-indigo-500 dark:text-indigo-400 uppercase tracking-widest select-none pointer-events-none py-2"
           >
             ➕ Drop here to make sub-task
           </div>
