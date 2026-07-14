@@ -1,4 +1,4 @@
-export type Level = 1 | 2 | 3 | 4;
+export type Level = 1 | 2 | 3;
 
 export interface Issue {
   id: string;
@@ -6,6 +6,7 @@ export interface Issue {
   description?: string;
   importance: Level;
   urgency: Level;
+  pendingReason?: string;
   children: Issue[];
   createdAt: number;
   completed: boolean;

@@ -127,13 +127,12 @@ const onDrop = () => {
                 <div 
                   class="w-1.5 h-1.5 rounded-full" 
                   :class="[
-                    element.urgency === 4 ? 'bg-red-500' :
-                    element.urgency === 3 ? 'bg-orange-500' :
-                    element.urgency === 2 ? 'bg-amber-500' : 'bg-teal-500'
+                    element.urgency === 3 ? 'bg-red-500' :
+                    element.urgency === 2 ? 'bg-amber-500' : 'bg-slate-400'
                   ]"
                 ></div>
                 <span class="text-[9px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">
-                  {{ element.importance === 4 ? 'Critical' : element.importance === 3 ? 'High' : element.importance === 2 ? 'Medium' : 'Low' }}
+                  {{ element.importance === 3 ? 'High' : element.importance === 2 ? 'Medium' : 'Low' }}
                 </span>
               </div>
             </div>

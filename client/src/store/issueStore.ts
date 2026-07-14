@@ -154,7 +154,7 @@ export const useIssueStore = defineStore('issue', () => {
     }
   }
 
-  function addIssue(parentId: string | null, title: string, importance: Level, urgency: Level, description?: string) {
+  function addIssue(parentId: string | null, title: string, importance: Level, urgency: Level, description?: string, pendingReason?: string) {
     const parentList = parentId === null 
       ? issues.value 
       : findIssueById(issues.value, parentId)?.children;
@@ -165,6 +165,7 @@ export const useIssueStore = defineStore('issue', () => {
       description,
       importance,
       urgency,
+      pendingReason: urgency === 1 ? pendingReason : undefined,
       children: [],
       createdAt: Date.now(),
       completed: false,

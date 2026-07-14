@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, onMounted, nextTick } from 'vue';
+import { ref, computed, onMounted, nextTick, watch } from 'vue';
 import type { Level } from '../types';
 
 const props = defineProps<{
@@ -7,11 +7,12 @@ const props = defineProps<{
   initialDescription?: string;
   initialImportance?: Level;
   initialUrgency?: Level;
+  initialPendingReason?: string;
   submitLabel: string;
 }>();
 
 const emit = defineEmits<{
-  (e: 'submit', data: { title: string; description: string; importance: Level; urgency: Level }): void;
+  (e: 'submit', data: { title: string; description: string; importance: Level; urgency: Level; pendingReason?: string }): void;
   (e: 'cancel'): void;
 }>();
 
@@ -19,8 +20,14 @@ const titleInput = ref<HTMLInputElement | null>(null);
 const descriptionInput = ref<HTMLTextAreaElement | null>(null);
 const title = ref(props.initialTitle || '');
 const description = ref(props.initialDescription || '');
-const importance = ref<Level>(props.initialImportance || 1);
-const urgency = ref<Level>(props.initialUrgency || 1);
+const importance = ref<Level>(props.initialImportance || 2);
+const urgency = ref<Level>(props.initialUrgency || 2);
+const pendingReason = ref(props.initialPendingReason || '');
+
+// Clear pendingReason when urgency is no longer "Pending"
+watch(urgency, (val) => {
+  if (val !== 1) pendingReason.value = '';
+});
 
 onMounted(() => {
   if (props.initialTitle) {
@@ -33,8 +40,9 @@ onMounted(() => {
 const isDirty = computed(() => {
   return title.value !== (props.initialTitle || '') ||
          description.value !== (props.initialDescription || '') ||
-         importance.value !== (props.initialImportance || 1) ||
-         urgency.value !== (props.initialUrgency || 1);
+         importance.value !== (props.initialImportance || 2) ||
+         urgency.value !== (props.initialUrgency || 2) ||
+         pendingReason.value !== (props.initialPendingReason || '');
 });
 
 const handleCancel = () => {
@@ -59,6 +67,7 @@ const handleSubmit = () => {
     description: description.value,
     importance: importance.value,
     urgency: urgency.value,
+    pendingReason: urgency.value === 1 ? pendingReason.value : undefined,
   });
 };
 
@@ -91,13 +100,11 @@ const handleTab = (e: KeyboardEvent) => {
   }
 
   if (start === end && !isShift) {
-    // Single cursor, normal Tab: insert 8 spaces at cursor
     description.value = val.substring(0, start) + '        ' + val.substring(end);
     nextTick(() => {
       textarea.selectionStart = textarea.selectionEnd = start + 8;
     });
   } else {
-    // Selection, or Shift+Tab (outdent)
     let deltaStart = 0;
     let deltaEnd = 0;
     const updatedLines = [...lines];
@@ -108,19 +115,11 @@ const handleTab = (e: KeyboardEvent) => {
       let newLine = originalLine;
 
       if (!isShift) {
-        // Indent: add 8 spaces to the start of the line
         newLine = '        ' + originalLine;
-
-        if (i === startLineIdx) {
-          deltaStart += 8;
-        }
-        if (i === endLineIdx) {
-          deltaEnd += 8;
-        } else if (i < endLineIdx) {
-          deltaEnd += 8;
-        }
+        if (i === startLineIdx) deltaStart += 8;
+        if (i === endLineIdx) deltaEnd += 8;
+        else if (i < endLineIdx) deltaEnd += 8;
       } else {
-        // Outdent: remove up to 8 spaces or 1 tab from the start of the line
         let spaceCount = 0;
         const isTab = originalLine[0] === '\t';
         if (isTab) {
@@ -130,10 +129,8 @@ const handleTab = (e: KeyboardEvent) => {
             spaceCount++;
           }
         }
-
         if (spaceCount > 0) {
           newLine = originalLine.substring(spaceCount);
-
           if (i === startLineIdx) {
             const offset = start - lineStart;
             deltaStart -= Math.min(offset, spaceCount);
@@ -146,7 +143,6 @@ const handleTab = (e: KeyboardEvent) => {
           }
         }
       }
-
       updatedLines[i] = newLine;
     }
 
@@ -182,18 +178,17 @@ defineExpose({
   saveOnOutsideClick
 });
 
+// 3 levels: High=3, Normal=2, Pending=1
 const levelOptions = {
   importance: [
-    { value: 4, label: 'Critical', activeClass: 'bg-red-600 text-white border-red-600' },
-    { value: 3, label: 'High', activeClass: 'bg-orange-600 text-white border-orange-600' },
-    { value: 2, label: 'Medium', activeClass: 'bg-amber-50 text-slate-950 border-amber-500' },
-    { value: 1, label: 'Low', activeClass: 'bg-teal-600 text-white border-teal-600' },
+    { value: 3, label: 'High',   activeClass: 'bg-red-600 text-white border-red-600' },
+    { value: 2, label: 'Medium', activeClass: 'bg-amber-500 text-white border-amber-500' },
+    { value: 1, label: 'Low',    activeClass: 'bg-teal-600 text-white border-teal-600' },
   ] as Array<{ value: Level; label: string; activeClass: string }>,
   urgency: [
-    { value: 4, label: 'Urgent', activeClass: 'bg-red-600 text-white border-red-600' },
-    { value: 3, label: 'Soon', activeClass: 'bg-orange-600 text-white border-orange-600' },
-    { value: 2, label: 'Normal', activeClass: 'bg-amber-50 text-slate-950 border-amber-500' },
-    { value: 1, label: 'Later', activeClass: 'bg-teal-600 text-white border-teal-600' },
+    { value: 3, label: 'Urgent',  activeClass: 'bg-red-600 text-white border-red-600' },
+    { value: 2, label: 'Normal',  activeClass: 'bg-amber-500 text-white border-amber-500' },
+    { value: 1, label: 'Pending', activeClass: 'bg-slate-500 text-white border-slate-500' },
   ] as Array<{ value: Level; label: string; activeClass: string }>
 };
 </script>
@@ -245,9 +240,10 @@ const levelOptions = {
       </div>
 
       <div class="grid grid-cols-1 gap-3 md:grid-cols-2">
+        <!-- Importance -->
         <div class="space-y-1">
           <label class="block text-[10px] font-bold uppercase tracking-tight text-slate-400 dark:text-slate-500">Importance</label>
-          <div class="grid grid-cols-4 gap-1">
+          <div class="grid grid-cols-3 gap-1">
             <button
               v-for="opt in levelOptions.importance"
               :key="'imp-'+opt.value"
@@ -266,9 +262,10 @@ const levelOptions = {
           </div>
         </div>
 
+        <!-- Urgency -->
         <div class="space-y-1">
           <label class="block text-[10px] font-bold uppercase tracking-tight text-slate-400 dark:text-slate-500">Urgency</label>
-          <div class="grid grid-cols-4 gap-1">
+          <div class="grid grid-cols-3 gap-1">
             <button
               v-for="opt in levelOptions.urgency"
               :key="'urg-'+opt.value"
@@ -287,6 +284,33 @@ const levelOptions = {
           </div>
         </div>
       </div>
+
+      <!-- Pending Reason (only shown when urgency = Pending) -->
+      <transition
+        enter-active-class="transition duration-200 ease-out"
+        enter-from-class="-translate-y-1 opacity-0"
+        enter-to-class="translate-y-0 opacity-100"
+        leave-active-class="transition duration-150 ease-in"
+        leave-from-class="translate-y-0 opacity-100"
+        leave-to-class="-translate-y-1 opacity-0"
+      >
+        <div v-if="urgency === 1" class="space-y-0.5">
+          <label class="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-tight text-slate-500 dark:text-slate-400">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            Pending Reason
+          </label>
+          <input
+            v-model="pendingReason"
+            type="text"
+            spellcheck="false"
+            @keydown.ctrl.enter="handleSubmit"
+            class="w-full rounded-md border border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 px-2 py-1 text-sm text-slate-700 dark:text-slate-300 outline-none transition placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:border-slate-500 dark:focus:border-slate-400 focus:ring-2 focus:ring-slate-100 dark:focus:ring-slate-800"
+            placeholder="Why is this task pending? (e.g. waiting for approval, blocked by X…)"
+          />
+        </div>
+      </transition>
 
       <div class="flex items-center justify-end gap-2 border-t border-slate-100 dark:border-slate-700 pt-2 transition-colors">
         <button

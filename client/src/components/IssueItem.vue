@@ -129,10 +129,9 @@ const doneChildren = computed(() => props.issue.children.filter(i => i.completed
 const importanceConfig = computed(() => {
   if (props.issue.completed) return { label: 'Completed', className: 'bg-slate-100 text-slate-400 ring-slate-200 dark:bg-slate-800 dark:text-slate-600 dark:ring-slate-700' };
   switch (props.issue.importance) {
-    case 4: return { label: 'Critical', className: 'bg-red-50 text-red-700 ring-red-200 dark:bg-red-900/20 dark:text-red-400 dark:ring-red-900/30' };
-    case 3: return { label: 'High', className: 'bg-orange-50 text-orange-700 ring-orange-200 dark:bg-orange-900/20 dark:text-orange-400 dark:ring-orange-900/30' };
+    case 3: return { label: 'High',   className: 'bg-red-50 text-red-700 ring-red-200 dark:bg-red-900/20 dark:text-red-400 dark:ring-red-900/30' };
     case 2: return { label: 'Medium', className: 'bg-amber-50 text-amber-800 ring-amber-200 dark:bg-amber-900/20 dark:text-amber-400 dark:ring-amber-900/30' };
-    case 1: return { label: 'Low', className: 'bg-teal-50 text-teal-700 ring-teal-200 dark:bg-teal-900/20 dark:text-teal-400 dark:ring-teal-900/30' };
+    case 1: return { label: 'Low',    className: 'bg-teal-50 text-teal-700 ring-teal-200 dark:bg-teal-900/20 dark:text-teal-400 dark:ring-teal-900/30' };
     default: return { label: 'Unknown', className: 'bg-slate-50 text-slate-700 ring-slate-200 dark:bg-slate-800 dark:text-slate-400 dark:ring-slate-700' };
   }
 });
@@ -140,22 +139,21 @@ const importanceConfig = computed(() => {
 const urgencyConfig = computed(() => {
   if (props.issue.completed) return { label: 'Done', accent: 'bg-slate-300 dark:bg-slate-700', className: 'bg-slate-100 text-slate-400 ring-slate-200 dark:bg-slate-800 dark:text-slate-600 dark:ring-slate-700' };
   switch (props.issue.urgency) {
-    case 4: return { label: 'Urgent', accent: 'bg-red-600', className: 'bg-red-50 text-red-700 ring-red-200 dark:bg-red-900/20 dark:text-red-400 dark:ring-red-900/30' };
-    case 3: return { label: 'Soon', accent: 'bg-orange-500', className: 'bg-orange-50 text-orange-700 ring-orange-200 dark:bg-orange-900/20 dark:text-orange-400 dark:ring-orange-900/30' };
-    case 2: return { label: 'Normal', accent: 'bg-amber-500', className: 'bg-amber-50 text-amber-800 ring-amber-200 dark:bg-amber-900/20 dark:text-amber-400 dark:ring-amber-900/30' };
-    case 1: return { label: 'Later', accent: 'bg-teal-600', className: 'bg-teal-50 text-teal-700 ring-teal-200 dark:bg-teal-900/20 dark:text-teal-400 dark:ring-teal-900/30' };
+    case 3: return { label: 'Urgent',  accent: 'bg-red-600',   className: 'bg-red-50 text-red-700 ring-red-200 dark:bg-red-900/20 dark:text-red-400 dark:ring-red-900/30' };
+    case 2: return { label: 'Normal',  accent: 'bg-amber-500', className: 'bg-amber-50 text-amber-800 ring-amber-200 dark:bg-amber-900/20 dark:text-amber-400 dark:ring-amber-900/30' };
+    case 1: return { label: 'Pending', accent: 'bg-slate-500', className: 'bg-slate-100 text-slate-600 ring-slate-200 dark:bg-slate-800 dark:text-slate-400 dark:ring-slate-700' };
     default: return { label: 'Unknown', accent: 'bg-slate-400', className: 'bg-slate-50 text-slate-700 ring-slate-200 dark:bg-slate-800 dark:text-slate-400 dark:ring-slate-700' };
   }
 });
 
-const handleAddChild = (data: { title: string; description: string; importance: Level; urgency: Level }) => {
-  store.addIssue(props.issue.id, data.title, data.importance, data.urgency, data.description);
+const handleAddChild = (data: { title: string; description: string; importance: Level; urgency: Level; pendingReason?: string }) => {
+  store.addIssue(props.issue.id, data.title, data.importance, data.urgency, data.description, data.pendingReason);
   isAddingChild.value = false;
   isExpanded.value = true;
 };
 
-const handleUpdate = (data: { title: string; description: string; importance: Level; urgency: Level }) => {
-  store.updateIssue(props.issue.id, data);
+const handleUpdate = (data: { title: string; description: string; importance: Level; urgency: Level; pendingReason?: string }) => {
+  store.updateIssue(props.issue.id, { ...data, pendingReason: data.urgency === 1 ? data.pendingReason : undefined });
   isEditing.value = false;
 };
 
@@ -177,6 +175,14 @@ const visibleChildrenCount = computed(() => {
   }
   return props.issue.children.filter(i => !i.completed).length;
 });
+
+// Only allow external drops into the child list when the user is actively hovering over it.
+// This prevents accidental reparenting when dragging a task past this area towards the Workspace.
+const childDraggableGroup = computed(() => ({
+  name: 'issues',
+  pull: true,
+  put: isDragOver.value,
+}));
 
 const themeClass = computed(() => {
   if (props.issue.completed) return null;
@@ -352,6 +358,13 @@ const themeClass = computed(() => {
             <p v-if="issue.description" class="mt-0.5 text-[11px] text-slate-500 dark:text-slate-400 line-clamp-1 italic">
               {{ issue.description }}
             </p>
+            <!-- Pending Reason display -->
+            <p v-if="issue.urgency === 1 && issue.pendingReason" class="mt-0.5 flex items-center gap-1 text-[11px] text-slate-500 dark:text-slate-400 italic">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 flex-shrink-0 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              {{ issue.pendingReason }}
+            </p>
           </div>
         </div>
 
@@ -408,6 +421,7 @@ const themeClass = computed(() => {
           :initial-description="issue.description"
           :initial-importance="issue.importance"
           :initial-urgency="issue.urgency"
+          :initial-pending-reason="issue.pendingReason"
           submit-label="Save Changes"
           @submit="handleUpdate"
           @cancel="isEditing = false"
@@ -440,7 +454,7 @@ const themeClass = computed(() => {
             ? 'min-h-[44px] border border-dashed border-indigo-300 dark:border-indigo-700 rounded-xl bg-indigo-50/10 dark:bg-indigo-900/5 flex items-center justify-center'
             : 'min-h-[4px]'
         ]"
-        :group="{ name: 'issues' }"
+        :group="childDraggableGroup"
         @start="store.draggingIssueId = ($event.item as any)._underlying_vm_.id"
         @end="store.draggingIssueId = null"
         @pointerdown.stop

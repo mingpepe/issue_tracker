@@ -89,8 +89,8 @@ const activeIssues = computed({
 
 const doneIssues = computed(() => store.issues.filter(i => i.completed).sort((a, b) => b.createdAt - a.createdAt));
 
-const handleAddTopLevel = (data: { title: string; description: string; importance: Level; urgency: Level }) => {
-  store.addIssue(store.lastSelectedId, data.title, data.importance, data.urgency, data.description);
+const handleAddTopLevel = (data: { title: string; description: string; importance: Level; urgency: Level; pendingReason?: string }) => {
+  store.addIssue(store.lastSelectedId, data.title, data.importance, data.urgency, data.description, data.pendingReason);
   isAddingTopLevel.value = false;
 };
 
