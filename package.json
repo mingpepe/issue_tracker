@@ -4,6 +4,8 @@
   "version": "1.0.0",
   "scripts": {
     "dev": "node dev.mjs",
+    "preview": "node start.mjs",
+    "start": "node start.mjs",
     "install-all": "npm install && cd client && npm install && cd ../server && npm install"
   }
 }

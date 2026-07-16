@@ -11,7 +11,7 @@ If you are using Windows, you can start the application with a single click:
    - *First run*: The script will automatically install all required components (this may take a minute).
    - *Subsequent runs*: The script will start the application immediately.
 3. **Open in Browser**: Once running, open your web browser and go to:
-   - **`http://localhost:5173`**
+   - **`http://localhost:4173`**
 4. **To Close**: Simply close the black console command window.
 
 ---

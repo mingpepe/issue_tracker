@@ -37,11 +37,11 @@ if not exist "client\node_modules" (
 
 echo [4/4] Starting servers...
 echo.
-echo Application will open in your browser shortly.
+echo Application will open in your browser shortly at: http://localhost:4173
 echo To close the application, simply close this command window.
 echo ---------------------------------------------------
 echo.
 
 :: Launch the app
-call npm run dev
+call npm run preview
 pause
