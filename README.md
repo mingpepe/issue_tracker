@@ -1,73 +1,39 @@
 # TaskPulse - Intelligent Task Management
 
-TaskPulse is a modern, high-performance task management application designed for organized workflows. It features a sophisticated dark theme, hierarchical task nesting, and fluid drag-and-drop organization.
+TaskPulse is a modern, high-performance task management application designed for organized workflows.
 
-## 🚀 Key Features
+## ⚡ Quick Start (One-Click)
 
-- **🌑 Elegant Dark Theme**: Optimized for focus with a cohesive dark aesthetic across all components.
-- **hierarchy Hierarchical Tasks**: Organize your flow with infinite nesting levels for sub-tasks.
-- **🖱️ Advanced Drag-and-Drop**: Seamlessly reorder tasks, nest them, or even drag them across **multiple tabs** for high-level organization.
-- **📝 Instant Editing**: Click any task title or description to instantly pop up a sophisticated **Modal Editor**.
-- **⌨️ Power-User Shortcuts**: Work at the speed of thought with integrated keyboard shortcuts.
-- **✅ Completion Management**: Toggle task status with a single click. Completed tasks are automatically moved to a dedicated "Completed" section.
-- **🧺 Bulk Operations**: Select multiple tasks to perform batch deletions, making cleanup fast and efficient.
-- **📏 Compact UI**: Designed to handle hundreds of tasks with a high-density, streamlined layout.
-- **🔄 Real-time Sync**: Automatically saves your changes to a local backend for persistence.
+If you are using Windows, you can start the application with a single click:
 
-## 🛠️ Tech Stack
+1. **Prerequisite**: Ensure you have Node.js installed. If not, download and install the LTS version from [nodejs.org](https://nodejs.org/).
+2. **Launch**: Double-click **`start.bat`** in this folder.
+   - *First run*: The script will automatically install all required components (this may take a minute).
+   - *Subsequent runs*: The script will start the application immediately.
+3. **Open in Browser**: Once running, open your web browser and go to:
+   - **`http://localhost:5173`**
+4. **To Close**: Simply close the black console command window.
 
-### Frontend (Client)
-- **Framework**: Vue 3 (Composition API)
-- **State Management**: Pinia
-- **Styling**: Tailwind CSS
-- **Interactions**: Vuedraggable (SortableJS)
-- **Icons**: Heroicons (SVG)
-
-### Backend (Server)
-- **Runtime**: Node.js
-- **Framework**: Express
-- **Storage**: JSON-based local persistence
-
-## 📥 Installation & Setup
-
-### Prerequisites
-- Node.js (v18 or higher)
-- npm or yarn
-
-### 1. Clone the repository
-```bash
-git clone <repository-url>
-cd issue_tracker
-```
-
-### 2. Install all dependencies
-```bash
-npm run install-all
-```
-
-### 3. Start Development Environment
-```bash
-npm run dev
-```
-This will simultaneously start:
-- **Server**: `http://localhost:3001`
-- **Client**: `http://localhost:5173`
-
-## 📖 Usage Guide
-
-- **Creating Tasks**: Use the "New Task" button or press `Alt + N` for top-level issues. Use the "Add" button inside a task to create nested sub-tasks.
-- **Quick Editing**: Simply click on the task title or description to open the edit modal.
-- **Organizing**: 
-    - **Reorder**: Grab the handle on the left of any task to drag and reorder.
-    - **Move to Tab**: Drag any task and drop it onto a Tab label at the top to move it instantly.
-- **Completing**: Click the circular checkbox next to a task title to mark it as done.
-- **Bulk Action**: Click the square checkbox on the far left to select multiple items. Use the bulk action bar or press `Delete` to move them to Trash.
+---
 
 ## ⌨️ Keyboard Shortcuts
 
 | Shortcut | Action |
 | :--- | :--- |
-| `Alt + N` | Toggle New Task form |
+| `Alt + N` | Create a New Task / Sub-task |
+| `Alt + W` | Toggle Workspace sidebar |
+| `Alt + S` | Toggle Notes Scratchpad |
+| `Delete` | Move selected tasks to Trash |
 | `Ctrl + Enter` | Save Task (inside form) |
 | `Esc` | Cancel / Close Modal |
-| `Delete` | Move selected tasks to Trash |
+
+---
+
+## 🛠️ Main Features
+
+- **🌑 Elegant Theme**: Optimized for focus with a cohesive light/dark aesthetic.
+- **hierarchy Hierarchical Tasks**: Organize your flow with infinite nesting levels for sub-tasks.
+- **🖱️ Drag-and-Drop**: Easily reorder tasks or drag them onto tab labels at the top to move them between tabs.
+- **📌 Interactive Workspace**: Focus on your immediate goals by pinning/tracking tasks.
+  - **One-Click Track**: Click **`Track`** on any card to pin it to the workspace.
+  - **Auto-Locate**: Click a pinned task in the workspace (or its locator icon) to instantly switch tabs, auto-expand its parent folders, and scroll to/highlight the task in the main list.
