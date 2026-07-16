@@ -16,6 +16,15 @@ If you are using Windows, you can start the application with a single click:
 
 ---
 
+## 💾 Data Storage
+
+Your data is stored locally on your machine and in your browser:
+- **Tasks and Issues**: Saved in **`server/issues.json`**.
+- **Scratchpad Notes**: Saved in **`server/notes.txt`**.
+- **Browser Cache**: A fallback backup of your tasks is kept in your browser's **Local Storage** to allow the app to work seamlessly even when offline.
+
+---
+
 ## ⌨️ Keyboard Shortcuts
 
 | Shortcut | Action |
