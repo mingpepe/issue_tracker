@@ -5,6 +5,19 @@ import { computed } from 'vue';
 
 const store = useIssueStore();
 
+const getIssueLocation = (id: string) => {
+  const pathInfo = store.findIssuePath(id);
+  if (!pathInfo) return null;
+  
+  const tabName = pathInfo.tab.name;
+  const parentTitles = pathInfo.path.slice(0, -1).map(i => i.title);
+  
+  return {
+    tabName,
+    parentPath: parentTitles.join(' > ')
+  };
+};
+
 const workspaceIssues = computed({
   get: () => store.workspaceIssues,
   set: (val) => {
@@ -91,8 +104,9 @@ const onDrop = () => {
       >
         <template #item="{ element }">
           <div 
-            class="group relative bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl p-3 shadow-sm hover:shadow-md transition-all flex items-center gap-3"
+            class="group relative bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl p-3 shadow-sm hover:shadow-md hover:border-indigo-200 dark:hover:border-indigo-800 transition-all flex items-center gap-3 cursor-pointer"
             :class="{ 'opacity-50 grayscale': element.completed }"
+            @click="store.locateIssue(element.id)"
           >
             <!-- Drag Handle Grip -->
             <div 
@@ -135,8 +149,33 @@ const onDrop = () => {
                   {{ element.importance === 3 ? 'High' : element.importance === 2 ? 'Medium' : 'Low' }}
                 </span>
               </div>
+              <!-- Tab & Parent Info Display -->
+              <div v-if="getIssueLocation(element.id)" class="flex flex-wrap items-center gap-1 mt-1.5">
+                <span class="px-1.5 py-0.5 rounded text-[8px] font-extrabold bg-indigo-50 text-indigo-600 dark:bg-indigo-950/40 dark:text-indigo-400 border border-indigo-100/50 dark:border-indigo-900/30 flex items-center gap-0.5 uppercase tracking-tighter">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-2.5 w-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M7 7h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                  </svg>
+                  {{ getIssueLocation(element.id)?.tabName }}
+                </span>
+                <span v-if="getIssueLocation(element.id)?.parentPath" class="text-[8px] text-slate-400 dark:text-slate-500 truncate max-w-[120px] font-medium" :title="getIssueLocation(element.id)?.parentPath">
+                  in {{ getIssueLocation(element.id)?.parentPath }}
+                </span>
+              </div>
             </div>
 
+            <!-- Locate Button -->
+            <button 
+              @click.stop="store.locateIssue(element.id)"
+              class="opacity-0 group-hover:opacity-100 p-1 text-slate-300 hover:text-indigo-500 dark:hover:text-indigo-400 transition-all"
+              title="Locate Task in List"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+              </svg>
+            </button>
+
+            <!-- Delete Button -->
             <button 
               @click.stop="removeFromWorkspace(element.id)"
               class="opacity-0 group-hover:opacity-100 p-1 text-slate-300 hover:text-red-500 transition-all"

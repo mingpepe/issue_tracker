@@ -18,6 +18,8 @@ export const useIssueStore = defineStore('issue', () => {
   const lastSelectedId = ref<string | null>(null);
   const showDone = ref(false);
   const draggingIssueId = ref<string | null>(null);
+  const collapsedIds = ref<Set<string>>(new Set());
+  const highlightedIssueId = ref<string | null>(null);
 
   const isOffline = ref(!navigator.onLine);
   const hasPendingSync = ref(localStorage.getItem('issues_pending_sync') === 'true');
@@ -345,6 +347,77 @@ export const useIssueStore = defineStore('issue', () => {
     return undefined;
   }
 
+  function findIssuePath(id: string): { tab: Tab; path: Issue[] } | undefined {
+    for (const tab of tabs.value) {
+      const path: Issue[] = [];
+      const search = (list: Issue[]): boolean => {
+        for (const item of list) {
+          path.push(item);
+          if (item.id === id) {
+            return true;
+          }
+          if (item.children && search(item.children)) {
+            return true;
+          }
+          path.pop();
+        }
+        return false;
+      };
+      if (search(tab.issues)) {
+        return { tab, path };
+      }
+    }
+    return undefined;
+  }
+
+  function toggleCollapse(id: string) {
+    const newCollapsed = new Set(collapsedIds.value);
+    if (newCollapsed.has(id)) {
+      newCollapsed.delete(id);
+    } else {
+      newCollapsed.add(id);
+    }
+    collapsedIds.value = newCollapsed;
+  }
+
+  function expandIssue(id: string) {
+    if (collapsedIds.value.has(id)) {
+      const newCollapsed = new Set(collapsedIds.value);
+      newCollapsed.delete(id);
+      collapsedIds.value = newCollapsed;
+    }
+  }
+
+  function locateIssue(id: string) {
+    const pathInfo = findIssuePath(id);
+    if (!pathInfo) return;
+
+    activeTabId.value = pathInfo.tab.id;
+
+    // Expand all ancestors
+    const ancestors = pathInfo.path.slice(0, -1);
+    const newCollapsed = new Set(collapsedIds.value);
+    ancestors.forEach(ancestor => {
+      newCollapsed.delete(ancestor.id);
+    });
+    collapsedIds.value = newCollapsed;
+
+    highlightedIssueId.value = id;
+    
+    setTimeout(() => {
+      if (highlightedIssueId.value === id) {
+        highlightedIssueId.value = null;
+      }
+    }, 2000);
+
+    setTimeout(() => {
+      const el = document.getElementById(`issue-${id}`);
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+    }, 100);
+  }
+
   const selectableIssuesInActiveTab = computed(() => {
     const list: Issue[] = [];
     const collect = (arr: Issue[]) => {
@@ -435,5 +508,11 @@ export const useIssueStore = defineStore('issue', () => {
     isOffline,
     hasPendingSync,
     findIssueByIdInAllTabs,
+    collapsedIds,
+    highlightedIssueId,
+    toggleCollapse,
+    expandIssue,
+    findIssuePath,
+    locateIssue,
   };
 });

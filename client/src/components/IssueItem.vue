@@ -13,7 +13,29 @@ const props = defineProps<{
 }>();
 
 const store = useIssueStore();
-const isExpanded = ref(true);
+
+const isExpanded = computed({
+  get: () => !store.collapsedIds.has(props.issue.id),
+  set: (val) => {
+    if (val) {
+      store.expandIssue(props.issue.id);
+    } else {
+      if (!store.collapsedIds.has(props.issue.id)) {
+        store.toggleCollapse(props.issue.id);
+      }
+    }
+  }
+});
+
+const isHighlighted = computed(() => store.highlightedIssueId === props.issue.id);
+
+const toggleWorkspace = () => {
+  if (isInWorkspace.value) {
+    store.removeFromWorkspace(props.issue.id);
+  } else {
+    store.addToWorkspace([props.issue.id]);
+  }
+};
 
 const isDescendant = (parentId: string, childId: string): boolean => {
   const parent = store.findIssueByIdInAllTabs(parentId);
@@ -223,6 +245,7 @@ const themeClass = computed(() => {
 
 <template>
   <div 
+    :id="'issue-' + issue.id"
     class="relative group/item" 
     :class="{ 'opacity-60': issue.completed }"
     @dragenter="handleDragEnter"
@@ -232,12 +255,13 @@ const themeClass = computed(() => {
     <div v-if="depth > 0" class="absolute -left-5 top-6 h-px w-4 bg-slate-200 dark:bg-slate-700"></div>
 
     <div 
-      class="group/card relative rounded-lg border bg-white dark:bg-slate-800 shadow-sm transition"
+      class="group/card relative rounded-lg border bg-white dark:bg-slate-800 shadow-sm transition duration-300"
       :class="[
         themeClass ? themeClass.card : 'border-slate-200 dark:border-slate-700',
         isEditing ? 'border-blue-300 ring-4 ring-blue-100 dark:border-blue-500/50 dark:ring-blue-900/30' : 'hover:border-slate-300 dark:hover:border-slate-600 hover:shadow-md hover:z-40',
         isSelected ? 'ring-2 ring-indigo-500 dark:ring-indigo-600 z-10' : '',
         isLastSelected && !isEditing ? 'border-dashed border-amber-400 dark:border-amber-500/50 ring-2 ring-amber-500/20' : '',
+        isHighlighted ? 'ring-4 ring-amber-500 border-amber-500 dark:ring-amber-400 dark:border-amber-400 z-50 scale-[1.02] shadow-lg animate-pulse' : '',
         depth > 0 ? 'py-0' : ''
       ]"
     >
@@ -369,6 +393,20 @@ const themeClass = computed(() => {
         </div>
 
         <div class="flex flex-shrink-0 items-center gap-0.5 sm:opacity-0 sm:transition sm:group-hover/card:opacity-100" @click.stop>
+          <!-- Workspace Track Toggle Button -->
+          <button 
+            v-if="!issue.completed" 
+            @click="toggleWorkspace" 
+            class="inline-flex h-7 items-center gap-1 rounded-md px-1.5 text-xs font-medium transition hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-slate-950 dark:hover:text-slate-100" 
+            :class="isInWorkspace ? 'text-indigo-600 dark:text-indigo-400 font-bold' : 'text-slate-500 dark:text-slate-400'"
+            :title="isInWorkspace ? 'Remove from Workspace' : 'Add to Workspace'"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+            </svg>
+            {{ isInWorkspace ? 'Untrack' : 'Track' }}
+          </button>
+
           <button v-if="!issue.completed" @click="isAddingChild = !isAddingChild" class="inline-flex h-7 items-center gap-1 rounded-md px-1.5 text-xs font-medium text-slate-500 dark:text-slate-400 transition hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-slate-950 dark:hover:text-slate-100">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
