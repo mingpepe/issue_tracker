@@ -418,6 +418,89 @@ export const useIssueStore = defineStore('issue', () => {
     }, 100);
   }
 
+  /**
+   * Export all current data as a downloadable JSON file.
+   * Accepts an optional scratchpad notes string to bundle into the backup.
+   * Works fully offline — no server required.
+   */
+  function exportData(notes?: string) {
+    const payload = {
+      tabs: tabs.value,
+      trash: trash.value,
+      workspaceIds: workspaceIds.value,
+      notes: notes ?? '',
+      exportedAt: new Date().toISOString(),
+    };
+    const json = JSON.stringify(payload, null, 2);
+    const blob = new Blob([json], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
+    a.href = url;
+    a.download = `issues-backup-${timestamp}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
+  /**
+   * Open a file-picker and parse the selected JSON backup.
+   * Returns the raw parsed object so the caller can also restore notes.
+   * Loads issues into the store and attempts server sync;
+   * if offline, marks pending sync as usual.
+   */
+  function importData(): Promise<any> {
+    return new Promise((resolve, reject) => {
+      const input = document.createElement('input');
+      input.type = 'file';
+      input.accept = 'application/json,.json';
+
+      let settled = false;
+
+      // If the user closes the picker without choosing a file,
+      // onchange never fires but window regains focus — use that to unblock.
+      const onWindowFocus = () => {
+        // Give the browser a tick to fire onchange first (if a file was picked)
+        setTimeout(() => {
+          if (!settled) {
+            settled = true;
+            resolve(null);
+          }
+        }, 300);
+      };
+      window.addEventListener('focus', onWindowFocus, { once: true });
+
+      input.onchange = async () => {
+        window.removeEventListener('focus', onWindowFocus);
+        if (settled) return;
+        settled = true;
+
+        const file = input.files?.[0];
+        if (!file) { resolve(null); return; }
+        try {
+          const text = await file.text();
+          const data = JSON.parse(text);
+          loadDataIntoStore(data);
+          // persist issues to localStorage cache immediately
+          const cachePayload = {
+            tabs: tabs.value,
+            trash: trash.value,
+            workspaceIds: workspaceIds.value,
+          };
+          localStorage.setItem('cached_issues', JSON.stringify(cachePayload));
+          // attempt server sync for issues
+          await syncIssues();
+          // return full parsed object so caller can restore notes etc.
+          resolve(data);
+        } catch (e) {
+          console.error('Failed to import data:', e);
+          reject(e);
+        }
+      };
+
+      input.click();
+    });
+  }
+
   const selectableIssuesInActiveTab = computed(() => {
     const list: Issue[] = [];
     const collect = (arr: Issue[]) => {
@@ -514,5 +597,7 @@ export const useIssueStore = defineStore('issue', () => {
     expandIssue,
     findIssuePath,
     locateIssue,
+    exportData,
+    importData,
   };
 });

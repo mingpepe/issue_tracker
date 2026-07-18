@@ -19,6 +19,7 @@ const isAddingTopLevel = ref(false);
 const showTrash = ref(false);
 const showWorkspace = ref(true);
 const showNotes = ref(false);
+const isImporting = ref(false);
 const notesWidth = ref(Number(localStorage.getItem('notesWidth')) || 320);
 const isResizingNotes = ref(false);
 
@@ -157,6 +158,25 @@ const draggableTabs = computed({
     store.syncIssues();
   }
 });
+
+const handleExport = () => {
+  store.exportData(noteStore.content);
+};
+
+const handleImport = async () => {
+  if (isImporting.value) return;
+  isImporting.value = true;
+  try {
+    const data = await store.importData();
+    if (data && typeof data.notes === 'string') {
+      noteStore.updateContent(data.notes);
+    }
+  } catch {
+    alert('Failed to import: the file may be invalid or corrupted.');
+  } finally {
+    isImporting.value = false;
+  }
+};
 </script>
 
 <template>
@@ -285,6 +305,39 @@ const draggableTabs = computed({
                 <span>{{ isOffline ? 'Offline' : 'Syncing' }}</span>
               </div>
             </transition>
+
+            <!-- Export Button -->
+            <button
+              @click="handleExport"
+              class="text-xs font-bold px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1.5 text-slate-500 hover:text-emerald-700 hover:bg-emerald-50 dark:hover:text-emerald-400 dark:hover:bg-emerald-950/20"
+              title="Export issues as JSON backup"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+              </svg>
+              Export
+            </button>
+
+            <!-- Import Button -->
+            <button
+              @click="handleImport"
+              :disabled="isImporting"
+              class="text-xs font-bold px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1.5"
+              :class="isImporting
+                ? 'text-indigo-500 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/20 cursor-not-allowed'
+                : 'text-slate-500 hover:text-indigo-700 hover:bg-indigo-50 dark:hover:text-indigo-400 dark:hover:bg-indigo-950/20'"
+              title="Load issues from JSON backup"
+            >
+              <!-- Spinner while importing -->
+              <svg v-if="isImporting" xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 animate-spin" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 1121.21 8H18.235" />
+              </svg>
+              <!-- Upload icon when idle -->
+              <svg v-else xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+              </svg>
+              {{ isImporting ? 'Loading…' : 'Import' }}
+            </button>
 
             <button 
               @click="showNotes = !showNotes"
